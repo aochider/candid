@@ -1,0 +1,4 @@
+.aider*
+backend/src/generated/
+frontend/src/generated/
+
