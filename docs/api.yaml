@@ -1,0 +1,2251 @@
+openapi: 3.0.3
+info:
+  title: Candid API
+  description: API for Candid, a chat application for political discussion
+  version: 0.1.0
+
+servers:
+  - url: https://api.govtheppl.us/candid/v1
+    description: Production REST API server
+  - url: https://staging-api.govtheppl.us/candid/v1
+    description: Staging REST API server
+  - url: wss://ws.govtheppl.us/candid/v1
+    description: Production WebSocket server
+  - url: wss://staging-ws.govtheppl.us/candid/v1
+    description: Staging WebSocket server
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    CurrentUser:
+      type: object
+      required:
+        - id
+        - username
+        - displayName
+        - userType
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        displayName:
+          type: string
+        email:
+          type: string
+          format: email
+        userType:
+          type: string
+          enum: [normal, moderator, admin, guest]
+        joinTime:
+          type: string
+          format: date-time
+    User:
+      type: object
+      required:
+        - id
+        - username
+        - displayName
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        displayName:
+          type: string
+        trustScore:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Trust score of the user, between 0 and 1
+          
+    UserSettings:
+      type: object
+      properties:
+        categoryWeights:
+          type: array
+          items:
+            type: object
+            required:
+              - categoryId
+              - weight
+            properties:
+              categoryId:
+                type: string
+                format: uuid
+              weight:
+                type: string
+                enum: [most, more, default, less, least, none]
+        subcategoryWeights:
+          type: array
+          items:
+            type: object
+            required:
+              - subcategoryId
+              - weight
+            properties:
+              subcategoryId:
+                type: string
+                format: uuid
+              weight:
+                type: string
+                enum: [most, more, default, less, least, none]
+                
+    UserDemographics:
+      type: object
+      properties:
+        locationId:
+          type: string
+          format: uuid
+        lean:
+          type: string
+          enum: [very_liberal, liberal, moderate, conservative, very_conservative]
+        affiliation:
+          type: string
+          format: uuid
+          description: Reference to an affiliation entity
+        education:
+          type: string
+          enum: [less_than_high_school, high_school, some_college, associates, bachelors, masters, doctorate, professional]
+        geoLocale:
+          type: string
+          enum: [urban, suburban, rural]
+        race:
+          type: string
+        sex:
+          type: string
+          enum: [male, female, other]
+
+    Position:
+      type: object
+      required:
+        - id
+        - creator
+        - statement
+        - categoryId
+        - subcategoryId
+        - status
+      properties:
+        id:
+          type: string
+          format: uuid
+        creator:
+          $ref: '#/components/schemas/User'
+        statement:
+          type: string
+        categoryId:
+          type: string
+          format: uuid
+        subcategoryId:
+          type: string
+          format: uuid
+        createdTime:
+          type: string
+          format: date-time
+        agreeCount:
+          type: integer
+        disagreeCount:
+          type: integer
+        passCount:
+          type: integer
+        chatCount:
+          type: integer
+        status:
+          type: string
+          enum: [active, inactive, removed]
+
+    UserPosition:
+      type: object
+      required:
+        - id
+        - userId
+        - positionId
+        - status
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        positionId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [active, inactive]
+        agreeCount:
+          type: integer
+        disagreeCount:
+          type: integer
+        passCount:
+          type: integer
+        chatCount:
+          type: integer
+
+    PositionCategory:
+      type: object
+      required:
+        - id
+        - label
+      properties:
+        id:
+          type: string
+          format: uuid
+        parentId:
+          type: string
+          format: uuid
+          description: ID of the parent category (null for top-level categories)
+        label:
+          type: string
+        subcategories:
+          type: array
+          items:
+            $ref: '#/components/schemas/PositionCategory'
+
+    Response:
+      type: object
+      required:
+        - id
+        - positionId
+        - userId
+        - response
+      properties:
+        id:
+          type: string
+          format: uuid
+        positionId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        response:
+          type: string
+          enum: [agree, disagree, pass, chat]
+
+    ChatRequest:
+      type: object
+      required:
+        - id
+        - initiator
+        - userPositionId
+        - response
+      properties:
+        id:
+          type: string
+          format: uuid
+        initiator:
+          $ref: '#/components/schemas/User'
+        userPositionId:
+          type: string
+          format: uuid
+        response:
+          type: string
+          enum: [pending, accepted, dismissed, timeout]
+        responseTime:
+          type: string
+          format: date-time
+
+    ChatLog:
+      type: object
+      required:
+        - id
+        - chatRequestId
+        - startTime
+      properties:
+        id:
+          type: string
+          format: uuid
+        chatRequestId:
+          type: string
+          format: uuid
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        endType:
+          type: string
+          enum: [user_exit, agreed_closure]
+
+    ChatMessage:
+      type: object
+      required:
+        - id
+        - chatLogId
+        - sender
+        - type
+        - content
+        - sendTime
+      properties:
+        id:
+          type: string
+          format: uuid
+        chatLogId:
+          type: string
+          format: uuid
+        sender:
+          $ref: '#/components/schemas/User'
+        type:
+          type: string
+          enum: [text, agreed_position, agreed_closure]
+        content:
+          type: string
+        targetId:
+          type: string
+          format: uuid
+        sendTime:
+          type: string
+          format: date-time
+
+    Survey:
+      type: object
+      required:
+        - id
+        - creator
+        - surveyTitle
+        - createdTime
+        - startTime
+        - endTime
+        - questions
+      properties:
+        id:
+          type: string
+          format: uuid
+        creator:
+          $ref: '#/components/schemas/User'
+        positionCategoryId:
+          type: string
+          format: uuid
+        surveyTitle:
+          type: string
+        createdTime:
+          type: string
+          format: date-time
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        questions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SurveyQuestion'
+
+    SurveyQuestion:
+      type: object
+      required:
+        - id
+        - surveyId
+        - question
+        - options
+      properties:
+        id:
+          type: string
+          format: uuid
+        surveyId:
+          type: string
+          format: uuid
+        question:
+          type: string
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/SurveyQuestionOption'
+        surveyTitle:
+          type: string
+          description: Title of the parent survey
+
+    SurveyQuestionOption:
+      type: object
+      required:
+        - id
+        - surveyQuestionId
+        - option
+      properties:
+        id:
+          type: string
+          format: uuid
+        surveyQuestionId:
+          type: string
+          format: uuid
+        option:
+          type: string
+          
+    SurveyQuestionResponse:
+      type: object
+      required:
+        - id
+        - surveyQuestionOptionId
+        - userId
+        - responseTime
+      properties:
+        id:
+          type: string
+          format: uuid
+        surveyQuestionOptionId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        responseTime:
+          type: string
+          format: date-time
+
+    Report:
+      type: object
+      required:
+        - id
+        - reportType
+        - targetId
+        - submitterId
+        - ruleId
+        - status
+      properties:
+        id:
+          type: string
+          format: uuid
+        reportType:
+          type: string
+          enum: [position, chat]
+        targetId:
+          type: string
+          format: uuid
+        submitterId:
+          type: string
+          format: uuid
+        ruleId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [pending, dismissed, action_taken]
+        submitterComment:
+          type: string
+
+    ModAction:
+      type: object
+      required:
+        - id
+        - reportId
+        - responder
+        - modResponse
+      properties:
+        id:
+          type: string
+          format: uuid
+        reportId:
+          type: string
+          format: uuid
+        responder:
+          $ref: '#/components/schemas/User'
+        modResponse:
+          type: string
+          enum: [dismiss, take_action, mark_spurious]
+        modResponseText:
+          type: string
+          
+    ModActionAppeal:
+      type: object
+      required:
+        - id
+        - userId
+        - modActionId
+        - appealText
+        - appealState
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        modActionId:
+          type: string
+          format: uuid
+        appealText:
+          type: string
+        appealState:
+          type: string
+          enum: [pending, approved, rejected]
+
+    Kudos:
+      type: object
+      required:
+        - id
+        - sender
+        - receiver
+        - chatLogId
+      properties:
+        id:
+          type: string
+          format: uuid
+        sender:
+          $ref: '#/components/schemas/User'
+
+        chatLogId:
+          type: string
+          format: uuid
+          
+    Location:
+      type: object
+      required:
+        - id
+        - parentId
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+        parentId:
+          type: string
+          format: uuid
+          description: ID of the parent location
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/Location'
+        code:
+          type: string
+        name:
+          type: string
+          
+    Affiliation:
+      type: object
+      required:
+        - id
+        - locationId
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+        locationId:
+          type: string
+          format: uuid
+        name:
+          type: string
+          
+    ModActionAppealResponse:
+      type: object
+      required:
+        - id
+        - modActionAppealId
+        - responder
+        - appealResponseText
+        - response
+      properties:
+        id:
+          type: string
+          format: uuid
+        modActionAppealId:
+          type: string
+          format: uuid
+        responder:
+          $ref: '#/components/schemas/User'
+        appealResponseText:
+          type: string
+        response:
+          type: string
+          enum: [approve, reject]
+          
+    ModActionRequest:
+      type: object
+      required:
+        - modResponse
+      properties:
+        modResponse:
+          type: string
+          enum: [dismiss, take_action, mark_spurious]
+        modResponseText:
+          type: string
+          description: Required when modResponse is dismiss or take_action
+        actions:
+          type: array
+          description: Required when modResponse is take_action
+          items:
+            type: object
+            required:
+              - userClass
+              - action
+            properties:
+              userClass:
+                type: string
+                enum: [submitter, active_adopter, passive_adopter]
+              action:
+                type: string
+                enum: [permanent_ban, temporary_ban, warning, removed]
+              duration:
+                type: integer
+                description: Duration in days for temporary bans
+                
+    CreateSurveyRequest:
+      type: object
+      required:
+        - surveyTitle
+        - startTime
+        - endTime
+        - questions
+      properties:
+        positionCategoryId:
+          type: string
+          format: uuid
+        surveyTitle:
+          type: string
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        questions:
+          type: array
+          items:
+            type: object
+            required:
+              - question
+              - options
+            properties:
+              question:
+                type: string
+              options:
+                type: array
+                items:
+                  type: string
+          
+    PositionResponse:
+      type: object
+      required:
+        - responses
+      properties:
+        responses:
+          type: array
+          items:
+            type: object
+            required:
+              - positionId
+              - response
+            properties:
+              positionId:
+                type: string
+                format: uuid
+              response:
+                type: string
+                enum: [agree, disagree, pass]
+
+    ErrorModel:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+        details:
+          type: object
+
+    WebSocketEvent:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          description: Type of WebSocket event
+        payload:
+          type: object
+          description: Event-specific payload
+
+    ChatMessageEvent:
+      allOf:
+        - $ref: '#/components/schemas/WebSocketEvent'
+        - type: object
+          properties:
+            type:
+              enum: [message]
+            payload:
+              $ref: '#/components/schemas/ChatMessage'
+
+    ChatTypingEvent:
+      allOf:
+        - $ref: '#/components/schemas/WebSocketEvent'
+        - type: object
+          properties:
+            type:
+              enum: [typing]
+            payload:
+              type: object
+              required:
+                - chatId
+                - isTyping
+              properties:
+                chatId:
+                  type: string
+                  format: uuid
+                isTyping:
+                  type: boolean
+                  
+    ToxicityWarningEvent:
+      allOf:
+        - $ref: '#/components/schemas/WebSocketEvent'
+        - type: object
+          properties:
+            type:
+              enum: [toxicity_warning]
+            payload:
+              type: object
+              required:
+                - chatId
+                - messageId
+                - waitTimeSeconds
+                - content
+                - toxicityScore
+              properties:
+                chatId:
+                  type: string
+                  format: uuid
+                messageId:
+                  type: string
+                  format: uuid
+                  description: Temporary ID for the pending message
+                waitTimeSeconds:
+                  type: integer
+                  description: Time in seconds the user must wait before sending anyway
+                toxicityScore:
+                  type: number
+                  format: float
+                  minimum: 0
+                  maximum: 1
+                  description: Toxicity score from PerspectiveAPI (0-1)
+                content:
+                  type: string
+                  description: The original message content that triggered the warning
+
+    ChatStatusEvent:
+      allOf:
+        - $ref: '#/components/schemas/WebSocketEvent'
+        - type: object
+          properties:
+            type:
+              enum: [status]
+            payload:
+              type: object
+              required:
+                - chatId
+                - status
+              properties:
+                chatId:
+                  type: string
+                  format: uuid
+                status:
+                  type: string
+                  enum: [active, ended, user_left]
+                  
+    SendAnywayEvent:
+      allOf:
+        - $ref: '#/components/schemas/WebSocketEvent'
+        - type: object
+          properties:
+            type:
+              enum: [send_anyway]
+            payload:
+              type: object
+              required:
+                - chatId
+                - messageId
+              properties:
+                chatId:
+                  type: string
+                  format: uuid
+                messageId:
+                  type: string
+                  format: uuid
+                  description: ID of the pending message from the toxicity warning
+                  
+    MessageReadEvent:
+      allOf:
+        - $ref: '#/components/schemas/WebSocketEvent'
+        - type: object
+          properties:
+            type:
+              enum: [message_read]
+            payload:
+              type: object
+              required:
+                - chatId
+                - messageIds
+                - timestamp
+              properties:
+                chatId:
+                  type: string
+                  format: uuid
+                messageIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                  description: IDs of the messages that have been read
+                agreedPositionIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                  description: IDs of the agreed positions that have been read
+                timestamp:
+                  type: string
+                  format: date-time
+                  description: Time when the messages were read
+
+    ChatRequestEvent:
+      allOf:
+        - $ref: '#/components/schemas/WebSocketEvent'
+        - type: object
+          properties:
+            type:
+              enum: [chat_request]
+            payload:
+              $ref: '#/components/schemas/ChatRequest'
+
+    AgreedPositionEvent:
+      allOf:
+        - $ref: '#/components/schemas/WebSocketEvent'
+        - type: object
+          properties:
+            type:
+              enum: [agreed_position]
+            payload:
+              type: object
+              required:
+                - chatId
+                - action
+              properties:
+                chatId:
+                  type: string
+                  format: uuid
+                action:
+                  type: string
+                  enum: [propose, accept, reject, modify]
+                proposalId:
+                  type: string
+                  format: uuid
+                  description: Required when action is accept, reject, or modify
+                content:
+                  type: string
+                  description: Required when action is propose or modify
+
+security:
+  - BearerAuth: []
+
+paths:
+  /websocket:
+    get:
+      operationId: connectWebSocket
+      summary: WebSocket Connection
+      description: |
+        # WebSocket API
+
+        The Candid API provides WebSocket endpoints for real-time
+        chat functionality.
+
+        ## Connection
+        To connect to the WebSocket server, clients should:
+        1. Establish a secure WebSocket connection to the WebSocket server URL
+        2. Send an authentication message with their JWT token
+        3. Receive a confirmation message
+
+        ## Authentication
+        ```json
+        {
+          "type": "authenticate",
+          "token": "JWT_TOKEN_HERE"
+        }
+        ```
+
+        ## Events
+        The server will push events to connected clients. Event types include:
+        - message: New chat message
+        - typing: User is typing indicator
+        - status: Chat status changes
+        - chat_request: New chat request
+        - agreed_position: Updates to agreed position statements
+        - toxicity_warning: Warning when a message is detected as toxic
+        - message_read: Notification that messages have been read by the recipient
+
+        ## Sending Messages
+        To send a chat message:
+        ```json
+        {
+          "type": "message",
+          "chatId": "CHAT_UUID",
+          "content": "Message text",
+          "messageType": "text"
+        }
+        ```
+        
+        If a message is detected as toxic by PerspectiveAPI, the server will respond with a toxicity_warning event:
+        ```json
+        {
+          "type": "toxicity_warning",
+          "payload": {
+            "chatId": "CHAT_UUID",
+            "messageId": "MESSAGE_UUID",
+            "waitTimeSeconds": 30,
+            "toxicityScore": 0.85,
+            "content": "Original message text"
+          }
+        }
+        ```
+        
+        After the wait time expires, the client can send a send_anyway event to confirm sending the message:
+        ```json
+        {
+          "type": "send_anyway",
+          "payload": {
+            "chatId": "CHAT_UUID",
+            "messageId": "MESSAGE_UUID"
+          }
+        }
+        ```
+        
+        ## Read Receipts
+        When a user reads messages, the client should send a message_read event:
+        ```json
+        {
+          "type": "message_read",
+          "payload": {
+            "chatId": "CHAT_UUID",
+            "messageIds": ["MESSAGE_UUID_1", "MESSAGE_UUID_2"],
+            "agreedPositionIds": ["POSITION_UUID_1"],
+            "timestamp": "2023-05-22T15:30:45Z"
+          }
+        }
+        ```
+        
+        The server will broadcast this event to the other participant in the chat, allowing them to know which messages and agreed positions have been read.
+
+        ## Typing Indicators
+        To indicate a user is typing:
+        ```json
+        {
+          "type": "typing",
+          "chatId": "CHAT_UUID",
+          "isTyping": true
+        }
+        ```
+
+        ## Heartbeat
+        Clients should send a ping message every 30 seconds to keep
+        the
+        connection alive:
+        ```json
+        {
+          "type": "ping"
+        }
+        ```
+        The server will respond with:
+        ```json
+        {
+          "type": "pong"
+        }
+        ```
+      tags:
+        - WebSocket
+      responses:
+        '101':
+          description: WebSocket connection established
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [connected]
+                  message:
+                    type: string
+  /auth/register:
+    post:
+      operationId: registerUser
+      summary: Register a new user
+      tags:
+        - Authentication
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - displayName
+                - password
+              properties:
+                username:
+                  type: string
+                displayName:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrentUser'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+                
+  /admin/surveys/{surveyId}:
+    get:
+      operationId: getSurveyByIdAdmin
+      summary: Get a specific survey (admin access)
+      tags:
+        - Admin
+      parameters:
+        - name: surveyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Survey details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Survey'
+        '403':
+          description: Forbidden - insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Survey not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+    patch:
+      operationId: updateSurvey
+      summary: Update a survey
+      tags:
+        - Admin
+      parameters:
+        - name: surveyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Survey'
+      responses:
+        '200':
+          description: Survey updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Survey'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden - insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Survey not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+    delete:
+      operationId: deleteSurvey
+      summary: Delete a survey
+      tags:
+        - Admin
+      parameters:
+        - name: surveyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Survey deleted successfully
+        '403':
+          description: Forbidden - insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Survey not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+
+  /auth/login:
+    post:
+      operationId: loginUser
+      summary: Log in a user
+      tags:
+        - Authentication
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                  format: password
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/CurrentUser'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+
+  /auth/social/google:
+    post:
+      operationId: loginWithGoogle
+      summary: Log in or register with Google
+      tags:
+        - Authentication
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - token
+              properties:
+                token:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/CurrentUser'
+        '401':
+          description: Invalid token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+
+  /auth/social/facebook:
+    post:
+      operationId: loginWithFacebook
+      summary: Log in or register with Facebook
+      tags:
+        - Authentication
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - token
+              properties:
+                token:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/CurrentUser'
+        '401':
+          description: Invalid token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+
+  /card-queue:
+    get:
+      operationId: getCardQueue
+      summary: Get mixed queue of positions, surveys, and chat requests
+      tags:
+        - Cards
+      parameters:
+        - name: categoryWeights
+          in: query
+          description: Weights for position categories
+          schema:
+            type: array
+            items:
+              type: object
+              required:
+                - categoryId
+                - weight
+              properties:
+                categoryId:
+                  type: string
+                  format: uuid
+                weight:
+                  type: string
+                  enum: [most, more, default, less, least, none]
+          style: deepObject
+        - name: subcategoryWeights
+          in: query
+          description: Weights for position subcategories
+          schema:
+            type: array
+            items:
+              type: object
+              required:
+                - subcategoryId
+                - weight
+              properties:
+                subcategoryId:
+                  type: string
+                  format: uuid
+                weight:
+                  type: string
+                  enum: [most, more, default, less, least, none]
+          style: deepObject
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+          description: Maximum number of cards to return
+      responses:
+        '200':
+          description: Mixed queue of cards
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  required:
+                    - type
+                    - data
+                  properties:
+                    type:
+                      type: string
+                      enum: [position, survey, chat_request]
+                    data:
+                      oneOf:
+                        - $ref: '#/components/schemas/Position'
+                        - $ref: '#/components/schemas/SurveyQuestion'
+                        - $ref: '#/components/schemas/ChatRequest'
+
+  /positions:
+    post:
+      operationId: createPosition
+      summary: Create a new position statement
+      tags:
+        - Positions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - statement
+                - categoryId
+                - subcategoryId
+              properties:
+                statement:
+                  type: string
+                categoryId:
+                  type: string
+                  format: uuid
+                subcategoryId:
+                  type: string
+                  format: uuid
+      responses:
+        '201':
+          description: Position created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Position'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+
+  /positions/{positionId}:
+    get:
+      operationId: getPositionById
+      summary: Get a specific position statement
+      tags:
+        - Positions
+      parameters:
+        - name: positionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Position statement details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Position'
+        '404':
+          description: Position not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+
+  /positions/response:
+    post:
+      operationId: respondToPositions
+      summary: Respond to one or more position statements
+      tags:
+        - Positions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PositionResponse'
+      responses:
+        '200':
+          description: Responses recorded successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Response'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+
+  /positions/{positionId}/chat-request:
+    post:
+      operationId: createChatRequest
+      summary: Request to chat about a position statement
+      tags:
+        - Chat
+      parameters:
+        - name: positionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '201':
+          description: Chat request created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatRequest'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden - cannot request chat with your own position
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+
+  /positions/{positionId}/report:
+    post:
+      operationId: reportPosition
+      summary: Report a position statement
+      tags:
+        - Moderation
+      parameters:
+        - name: positionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - ruleId
+              properties:
+                ruleId:
+                  type: string
+                  format: uuid
+                comment:
+                  type: string
+                  maxLength: 255
+      responses:
+        '201':
+          description: Report submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Report'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+
+  /users/me:
+    get:
+      operationId: getCurrentUser
+      summary: Get current user profile
+      tags:
+        - Users
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrentUser'
+    patch:
+      operationId: updateUserProfile
+      summary: Update current user profile (only displayName and email)
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                displayName:
+                  type: string
+                email:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrentUser'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+                
+  /users/me/settings:
+    get:
+      operationId: getUserSettings
+      summary: Get current user settings
+      tags:
+        - Users
+      responses:
+        '200':
+          description: User settings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSettings'
+    put:
+      operationId: updateUserSettings
+      summary: Update current user settings
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserSettings'
+      responses:
+        '200':
+          description: Settings updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSettings'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+                
+  /users/me/demographics:
+    get:
+      operationId: getUserDemographics
+      summary: Get current user demographics
+      tags:
+        - Users
+      responses:
+        '200':
+          description: User demographics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDemographics'
+    put:
+      operationId: updateUserDemographics
+      summary: Replace user demographics
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserDemographics'
+      responses:
+        '200':
+          description: Demographics updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDemographics'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+    patch:
+      operationId: updateUserDemographicsPartial
+      summary: Update specific user demographics fields
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserDemographics'
+      responses:
+        '200':
+          description: Demographics updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDemographics'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+
+  /users/me/positions:
+    get:
+      operationId: getCurrentUserPositions
+      summary: Get current user's position statements
+      tags:
+        - Users
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, inactive, all]
+            default: active
+      responses:
+        '200':
+          description: List of user's position statements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserPosition'
+
+
+  /chat-requests/{requestId}:
+    put:
+      operationId: respondToChatRequest
+      summary: Respond to a chat request
+      tags:
+        - Chat
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - response
+              properties:
+                response:
+                  type: string
+                  enum: [accept, dismiss]
+      responses:
+        '200':
+          description: Chat request updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatRequest'
+        '404':
+          description: Chat request not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+
+  /chats/{chatId}/log:
+    get:
+      operationId: getChatLog
+      summary: Get JSON blob of a chat log
+      tags:
+        - Chat
+      description: |
+        Retrieves a complete JSON blob of a chat log.
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Complete chat log as JSON blob
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  chatLog:
+                    type: object
+                    description: Complete JSON blob of the chat log
+        '403':
+          description: Forbidden - user was not a participant in this chat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Chat not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+
+
+  /chats/{chatId}/report:
+    post:
+      operationId: reportChat
+      summary: Report a chat
+      tags:
+        - Moderation
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - ruleId
+              properties:
+                ruleId:
+                  type: string
+                  format: uuid
+                comment:
+                  type: string
+                  maxLength: 255
+      responses:
+        '201':
+          description: Report submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Report'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden - user was not a participant in this chat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+
+  /chats/{chatId}/kudos:
+    post:
+      operationId: sendKudos
+      summary: Send kudos to a user after a chat
+      tags:
+        - Chat
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '201':
+          description: Kudos sent successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Kudos'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden - user was not a participant in this chat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+
+  /categories:
+    get:
+      operationId: getAllCategories
+      summary: Get hierarchical structure of all position categories and subcategories
+      tags:
+        - Categories
+      responses:
+        '200':
+          description: Complete hierarchical structure of categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PositionCategory'
+        '401':
+          description: Unauthorized - authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+
+  /surveys:
+    get:
+      operationId: getActiveSurveys
+      summary: Get a list of currently active surveys
+      tags:
+        - Surveys
+      responses:
+        '200':
+          description: List of active surveys
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Survey'
+        '401':
+          description: Unauthorized - authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+                  
+  /surveys/{surveyId}:
+    get:
+      operationId: getSurveyById
+      summary: Get a specific survey
+      tags:
+        - Surveys
+      parameters:
+        - name: surveyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Survey details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Survey'
+        '401':
+          description: Unauthorized - authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Survey not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+
+  /surveys/{surveyId}/questions/{questionId}/response:
+    post:
+      operationId: respondToSurveyQuestion
+      summary: Respond to a survey question
+      tags:
+        - Surveys
+      parameters:
+        - name: surveyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: questionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - optionId
+              properties:
+                optionId:
+                  type: string
+                  format: uuid
+      responses:
+        '201':
+          description: Response recorded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SurveyQuestionResponse'
+        '401':
+          description: Unauthorized - authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+
+  /moderation/reports/{reportId}/response:
+    post:
+      operationId: takeModeratorAction
+      summary: Take action on a report
+      tags:
+        - Moderation
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ModActionRequest'
+      responses:
+        '200':
+          description: Action taken successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModAction'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden - insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+
+  /moderation/queue:
+    get:
+      operationId: getModerationQueue
+      summary: Get unified moderation queue with all items requiring moderator attention
+      tags:
+        - Moderation
+      responses:
+        '200':
+          description: List of all moderation items requiring attention
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  required:
+                    - type
+                    - data
+                  properties:
+                    type:
+                      type: string
+                      enum: [report, appeal]
+                    data:
+                      oneOf:
+                        - $ref: '#/components/schemas/Report'
+                        - $ref: '#/components/schemas/ModActionAppeal'
+        '403':
+          description: Forbidden - insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+
+  /moderation/appeals/{appealId}/response:
+    post:
+      operationId: respondToAppeal
+      summary: Respond to a moderation appeal
+      tags:
+        - Moderation
+      parameters:
+        - name: appealId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - response
+                - responseText
+              properties:
+                response:
+                  type: string
+                  enum: [approve, reject]
+                responseText:
+                  type: string
+      responses:
+        '200':
+          description: Appeal response recorded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModActionAppealResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden - insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+
+  /locations:
+    get:
+      operationId: getAllLocations
+      summary: Get hierarchical structure of all locations and affiliations
+      tags:
+        - Locations
+      responses:
+        '200':
+          description: Complete hierarchical structure of locations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  location:
+                    type: array
+                    items:
+                      allOf:
+                        - $ref: '#/components/schemas/Location'
+                        - type: object
+                          properties:
+                            affiliations:
+                              type: array
+                              items:
+                                $ref: '#/components/schemas/Affiliation'
+        '401':
+          description: Unauthorized - authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+  /users/{userId}:
+    get:
+      operationId: getUserById
+      summary: Get a user by ID
+      tags:
+        - Users
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID of the user to retrieve
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '403':
+          description: Forbidden - insufficient permissions to view this user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+                
+  /users/me/chats:
+    get:
+      operationId: getUserChats
+      summary: Get a list of the user's historical chats
+      tags:
+        - Users
+        - Chat
+      parameters:
+        - name: positionId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter chats by position ID
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+          description: Maximum number of chats to return
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+          description: Number of chats to skip
+      responses:
+        '200':
+          description: List of user's historical chats
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                      description: Chat ID
+                    startTime:
+                      type: string
+                      format: date-time
+                    endTime:
+                      type: string
+                      format: date-time
+                    position:
+                      $ref: '#/components/schemas/Position'
+                    otherUser:
+                      $ref: '#/components/schemas/User'
+                    agreedClosure:
+                      type: string
+                      description: The agreed closure message if the chat ended
+                        with one
+                
+  /admin/surveys:
+    get:
+      operationId: getSurveys
+      summary: Get a list of surveys
+      tags:
+        - Admin
+      parameters:
+        - name: title
+          in: query
+          schema:
+            type: string
+          description: Filter surveys by title (partial match)
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, inactive, all]
+            default: all
+          description: Filter surveys by active status
+        - name: createdAfter
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Filter surveys created after this timestamp
+        - name: createdBefore
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Filter surveys created before this timestamp
+      responses:
+        '200':
+          description: List of surveys
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Survey'
+        '403':
+          description: Forbidden - insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+    post:
+      operationId: createSurvey
+      summary: Create a new survey
+      tags:
+        - Admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSurveyRequest'
+      responses:
+        '201':
+          description: Survey created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Survey'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden - insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
