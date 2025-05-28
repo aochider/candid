@@ -66,7 +66,7 @@ components:
           minimum: 0
           maximum: 1
           description: Trust score of the user, between 0 and 1
-          
+
     UserSettings:
       type: object
       properties:
@@ -98,7 +98,7 @@ components:
               weight:
                 type: string
                 enum: [most, more, default, less, least, none]
-                
+
     UserDemographics:
       type: object
       properties:
@@ -382,7 +382,7 @@ components:
           format: uuid
         option:
           type: string
-          
+
     SurveyQuestionResponse:
       type: object
       required:
@@ -456,7 +456,7 @@ components:
           enum: [dismiss, take_action, mark_spurious]
         modResponseText:
           type: string
-          
+
     ModActionAppeal:
       type: object
       required:
@@ -498,7 +498,7 @@ components:
         chatLogId:
           type: string
           format: uuid
-          
+
     Location:
       type: object
       required:
@@ -521,7 +521,7 @@ components:
           type: string
         name:
           type: string
-          
+
     Affiliation:
       type: object
       required:
@@ -537,7 +537,7 @@ components:
           format: uuid
         name:
           type: string
-          
+
     ModActionAppealResponse:
       type: object
       required:
@@ -560,7 +560,7 @@ components:
         response:
           type: string
           enum: [approve, reject]
-          
+
     ModActionRequest:
       type: object
       required:
@@ -590,7 +590,7 @@ components:
               duration:
                 type: integer
                 description: Duration in days for temporary bans
-                
+
     CreateSurveyRequest:
       type: object
       required:
@@ -624,7 +624,7 @@ components:
                 type: array
                 items:
                   type: string
-          
+
     PositionResponse:
       type: object
       required:
@@ -695,7 +695,7 @@ components:
                   format: uuid
                 isTyping:
                   type: boolean
-                  
+
     ToxicityWarningEvent:
       allOf:
         - $ref: '#/components/schemas/WebSocketEvent'
@@ -751,7 +751,7 @@ components:
                 status:
                   type: string
                   enum: [active, ended, user_left]
-                  
+
     SendAnywayEvent:
       allOf:
         - $ref: '#/components/schemas/WebSocketEvent'
@@ -772,7 +772,7 @@ components:
                   type: string
                   format: uuid
                   description: ID of the pending message from the toxicity warning
-                  
+
     MessageReadEvent:
       allOf:
         - $ref: '#/components/schemas/WebSocketEvent'
@@ -892,7 +892,7 @@ paths:
           "messageType": "text"
         }
         ```
-        
+
         If a message is detected as toxic by PerspectiveAPI, the server will respond with a toxicity_warning event:
         ```json
         {
@@ -906,7 +906,7 @@ paths:
           }
         }
         ```
-        
+
         After the wait time expires, the client can send a send_anyway event to confirm sending the message:
         ```json
         {
@@ -917,7 +917,7 @@ paths:
           }
         }
         ```
-        
+
         ## Read Receipts
         When a user reads messages, the client should send a message_read event:
         ```json
@@ -931,7 +931,7 @@ paths:
           }
         }
         ```
-        
+
         The server will broadcast this event to the other participant in the chat, allowing them to know which messages and agreed positions have been read.
 
         ## Typing Indicators
@@ -1015,7 +1015,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorModel'
-                
+
   /admin/surveys/{surveyId}:
     get:
       operationId: getSurveyByIdAdmin
@@ -1399,39 +1399,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorModel'
 
-  /positions/{positionId}/chat-request:
-    post:
-      operationId: createChatRequest
-      summary: Request to chat about a position statement
-      tags:
-        - Chat
-      parameters:
-        - name: positionId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '201':
-          description: Chat request created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ChatRequest'
-        '400':
-          description: Invalid input
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorModel'
-        '403':
-          description: Forbidden - cannot request chat with your own position
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorModel'
-
   /positions/{positionId}/report:
     post:
       operationId: reportPosition
@@ -1517,7 +1484,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorModel'
-                
+
   /users/me/settings:
     get:
       operationId: getUserSettings
@@ -1555,7 +1522,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorModel'
-                
+
   /users/me/demographics:
     get:
       operationId: getUserDemographics
@@ -1641,9 +1608,40 @@ paths:
                 items:
                   $ref: '#/components/schemas/UserPosition'
 
+  /chats/requests/:
+    post:
+      operationId: createChatRequest
+      summary: Request to chat about a position statement
+      tags:
+        - Chat
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+      responses:
+        '201':
+          description: Chat request created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatRequest'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden - cannot request chat with your own position
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
 
-  /chat-requests/{requestId}:
-    put:
+  /chats/requests/{requestId}:
+    patch:
       operationId: respondToChatRequest
       summary: Respond to a chat request
       tags:
@@ -1660,13 +1658,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - response
-              properties:
-                response:
-                  type: string
-                  enum: [accept, dismiss]
+              $ref: '#/components/schemas/ChatRequest'
       responses:
         '200':
           description: Chat request updated
@@ -1674,12 +1666,63 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ChatRequest'
+        '401':
+          description: Unauthorized - authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+
+        '403':
+          description: Forbidden - user was not the recipient of this chat request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
         '404':
           description: Chat request not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorModel'
+    delete:
+      operationId: rescindChatRequest
+      summary: Rescind a chat request
+      tags:
+        - Chat
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Chat request updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatRequest'
+        '401':
+          description: Unauthorized - authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '403':
+          description: Forbidden - user was not the creator of this chat request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+        '404':
+          description: Chat request not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+
 
   /chats/{chatId}/log:
     get:
@@ -1805,6 +1848,67 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorModel'
 
+  /chats/user/{userId}:
+    get:
+      operationId: getUserChats
+      summary: Get a list of the user's historical chats
+      tags:
+        - Users
+        - Chat
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: positionId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter chats by position ID
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+          description: Maximum number of chats to return
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+          description: Number of chats to skip
+      responses:
+        '200':
+          description: List of user's historical chats
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                      description: Chat ID
+                    startTime:
+                      type: string
+                      format: date-time
+                    endTime:
+                      type: string
+                      format: date-time
+                    position:
+                      $ref: '#/components/schemas/Position'
+                    otherUser:
+                      $ref: '#/components/schemas/User'
+                    agreedClosure:
+                      type: string
+                      description: The agreed closure message if the chat ended
+                        with one
+
   /categories:
     get:
       operationId: getAllCategories
@@ -1848,7 +1952,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorModel'
-                  
+
   /surveys/{surveyId}:
     get:
       operationId: getSurveyById
@@ -2084,6 +2188,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorModel'
+
   /users/{userId}:
     get:
       operationId: getUserById
@@ -2117,62 +2222,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorModel'
-                
-  /users/me/chats:
-    get:
-      operationId: getUserChats
-      summary: Get a list of the user's historical chats
-      tags:
-        - Users
-        - Chat
-      parameters:
-        - name: positionId
-          in: query
-          schema:
-            type: string
-            format: uuid
-          description: Filter chats by position ID
-        - name: limit
-          in: query
-          schema:
-            type: integer
-            default: 20
-          description: Maximum number of chats to return
-        - name: offset
-          in: query
-          schema:
-            type: integer
-            default: 0
-          description: Number of chats to skip
-      responses:
-        '200':
-          description: List of user's historical chats
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    id:
-                      type: string
-                      format: uuid
-                      description: Chat ID
-                    startTime:
-                      type: string
-                      format: date-time
-                    endTime:
-                      type: string
-                      format: date-time
-                    position:
-                      $ref: '#/components/schemas/Position'
-                    otherUser:
-                      $ref: '#/components/schemas/User'
-                    agreedClosure:
-                      type: string
-                      description: The agreed closure message if the chat ended
-                        with one
-                
+
   /admin/surveys:
     get:
       operationId: getSurveys

@@ -5,7 +5,6 @@
 * Backend: node.js docker containers (scalability)
 * Frontend: reactnative (allows cross platform app development), Expo
 * Database: postgres
-* Time series database for chat logs?
 * CICD: github actions
 * Cloud provider: AWS
 * Comment detoxification: perspectiveapi
@@ -30,7 +29,6 @@
    - Display Name
    - password
    - Password re-entry
-- Once submitted, the “Create an Account” form hashes the password, sends the information to the backend, and the backend creates a new user with the provided information
 
 ## Users:
 - There are four types of users:
@@ -57,6 +55,7 @@
       - Answer survey questions
       - Guests are identified with a cookie
       - If a guest creates an account, they’re given the opportunity to retain their position statements collated via the cookie
+      - Guest statements are stored locally and pushed upon account creation
    - User’s information is stored and retrieved from the “Database”
 
 ## Position Statement:
@@ -153,14 +152,14 @@
     - username
     - email
     - password_hash
-    - join_time
+    - created_time
     - display_name
     - user_type
 - user_activity
     - id (key)
     - user_id (foreign_key)
     - activity_start_time
-    - Activity_end_time
+    - activity_end_time
 - user_position_categories
     - id (key)
     - user_id (foreign_key)
@@ -168,15 +167,14 @@
     - priority
 - kudos
     - id (key)
-    - sender_id (foreign_key)
-    - receiver_id (foreign_key)
+    - sender_user_id (foreign_key)
+    - receiver_user_id (foreign_key)
     - chat_log_id (foreign_key)
 - position
     - id (key)
-    - creator_id (foreign_key)
-    - subcategory_id (foreign_key)
-    - dest_location_id (foreign_key)
-    - is_subnational
+    - creator_user_id (foreign_key)
+    - category_id (foreign_key)
+    - location_id (foreign_key)
     - statement
     - created_time
     - agree_count
@@ -187,10 +185,10 @@
 - position_category
     - id (key)
     - Label
-    - parent (foreign_key)
-- location_region
+    - parent_position_category_id (foreign_key)
+- location
     - id (key)
-    - parent_id (foreign_key)
+    - parent_location_id (foreign_key)
     - code
     - name
 - affiliation
@@ -213,7 +211,7 @@
     - response
 - survey
     - id (key)
-    - creator_id (foreign key)
+    - creator_user_id (foreign key)
     - position_category_id (foreign_key)
     - survey_title
     - created_time
@@ -234,7 +232,7 @@
     - response_time
 - chat_request
     - id (key)
-    - initiator_id (foreign_key)
+    - initiator_user_id (foreign_key)
     - user_position_id (foreign_key)
     - response
     - response_time
@@ -246,21 +244,21 @@
     - end_type
 - report
     - id (key)
-    - report_type
-    - target_id (foreign_key)
-    - submitter (foreign_key)
-    - rule (foreign_key)
+    - target_object_type
+    - target_object_id (foreign_key)
+    - submitter_user_id (foreign_key)
+    - rule_id (foreign_key)
     - status
     - submitter_comment
 - mod_action
     - id (key)
     - report_id (foreign_key)
-    - responder (foreign_key)
+    - responder_user_id (foreign_key)
     - mod_response
     - mod_response_text
 - mod_action_class
     - id (key)
-    - mod_action (foreign_key)
+    - mod_action_id (foreign_key)
     - class
     - action_start_time
     - action_end_time
@@ -268,7 +266,7 @@
 - mod_action_target
     - id (key)
     - user_id (foreign_key)
-    - mod_action_class (foreign_key)
+    - mod_action_class_id (foreign_key)
 - mod_action_appeal
     - id (key)
     - user_id (foreign_key)
@@ -278,13 +276,13 @@
 - mod_action_appeal_response
     - id (key)
     - mod_action_appeal_id (foreign_key)
-    - responder (foreign_key)
+    - responder_user_id (foreign_key)
     - appeal_response_text
 - user_demographics
     - id (key)
     - user_id (foreign key)
     - location_id (foreign_key)
-    - affiliation (foreign_key)
+    - affiliation_id (foreign_key)
     - lean
     - education
     - geo_locale
@@ -292,11 +290,11 @@
     - sex
 - user_location
     - id (key)
-    - user (foreign_key)
-    - location (foreign_key)
+    - user_id (foreign_key)
+    - location_id (foreign_key)
 - rule
     - id (key)
-    - creator (foreign_key)
+    - creator_user_id (foreign_key)
     - title
     - text
     - status
