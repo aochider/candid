@@ -1,0 +1,4 @@
+pip-tools
+Flask
+Flask-SQLAlchemy
+psycopg2-binary
