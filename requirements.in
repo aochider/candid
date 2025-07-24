@@ -1,4 +1,5 @@
-pip-tools
+bcrypt
 Flask
-Flask-SQLAlchemy
+gunicorn
+pip-tools
 psycopg2-binary

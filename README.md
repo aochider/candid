@@ -25,4 +25,18 @@ Run `docker compose up -d`
 
 # Updating Python dependencies
 
-Use the `api` container to update dependencies and generate a lockfile `pip-compile requirements.in -o requirements.txt`.
+Use the `api` container shell to update dependencies and generate a lockfile from the `/app` directory: `pip-compile requirements.in -o requirements.txt`.
+
+# Running migrations
+
+Use the `api` container shell to run migrations. This will delete all of your tables and data: from the `/app` directory, run `python3 database/reset_hard.py`.
+
+# TODO
+
+* Make script to load db with test data
+* Make sure gunicorn and Flask are set up correctly for prod (eg, not running at root)
+* Set up prod vs dev Dockerfile stages so we don't copy all files to prod and such
+* Set up Flask config
+* Set up logging
+* Set up load tests
+* Set up unit tests

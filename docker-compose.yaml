@@ -1,31 +1,31 @@
 version: '3.8'
 
 services:
-  api:
-    build:
-        context: .
-        dockerfile: build/Dockerfile.dev
-    ports:
-      - "5000:5000"
-    environment:
-      DATABASE_URL: postgresql://user:password@db:5432/mydatabase
-    depends_on:
-      - db
-    volumes:
-      - .:/app # Mount current directory to /app in container for development
-
-  db:
-    image: postgres:13
-    environment:
-      POSTGRES_DB: mydatabase
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-    volumes:
-      - postgres_data:/var/lib/postgresql/data # Persist data
-      
-  tools:
-    image: ubuntu:plucky
-    command: [ "tail", "-f", "/dev/null" ]
-
+    api:
+        build:
+            context: .
+            dockerfile: build/Dockerfile
+        command: "gunicorn --timeout 30 --bind 0.0.0.0:8000 -w 4 -k gthread 'app.app:create_app()' --reload"
+        ports:
+            - "8000:8000"
+        environment:
+            DATABASE_URL: postgresql://user:password@db:5432/mydatabase
+            FLASK_ENV: dev
+            FLASK_APP: "app.app:create_app"
+        depends_on:
+            - db
+        volumes:
+            - .:/app # Mount current directory to /app in container for development
+    db:
+        image: postgres:13
+        environment:
+            POSTGRES_DB: mydatabase
+            POSTGRES_USER: user
+            POSTGRES_PASSWORD: password
+        volumes:
+            - postgres_data:/var/lib/postgresql/data # Persist data
+    tools:
+        image: ubuntu:plucky
+        command: [ "tail", "-f", "/dev/null" ]
 volumes:
-  postgres_data:
+    postgres_data:
