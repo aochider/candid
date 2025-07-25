@@ -3,6 +3,6 @@ create table "chat_log" (
 	position_id bigint not null,
 	creator_user_id bigint not null,
 	responder_user_id bigint not null,
-	message varchar(256) not null,
-	message_time timestamp without time zone default current_timestamp
+	chat_log_time timestamp without time zone default current_timestamp,
+	status varchar(16) not null
 );

@@ -6,7 +6,7 @@ def register_routes(app):
 	@app.route('/chat_log/position/<int:position_id>/responder_user/<int:responder_user_id>')
 	def get_chat_logs(position_id, responder_user_id):
 		messages = ChatLog.get(position_id, responder_user_id)
-		messages = [{"position_id": msg.position_id, "responder_user_id": msg.responder_user_id, "message": msg.message} for msg in messages]
+		messages = [{"id": msg.id, "position_id": msg.position_id, "responder_user_id": msg.responder_user_id, "message": msg.message} for msg in messages]
 		return {"messages": messages}
 
 	@app.route('/chat_log/position/<int:position_id>/responder_user/<int:responder_user_id>/message_offset/<int:message_id_offset>')

@@ -24,8 +24,14 @@ services:
             POSTGRES_PASSWORD: password
         volumes:
             - postgres_data:/var/lib/postgresql/data # Persist data
-    tools:
-        image: ubuntu:plucky
-        command: [ "tail", "-f", "/dev/null" ]
+    ui:
+        image: nginx:alpine  # Use a lightweight Nginx image
+        ports:
+          - "8001:80"          # Map host port 80 to container port 80
+        depends_on:
+            - api
+        volumes:
+          - ./static:/usr/share/nginx/html:ro # Mount your static files
+
 volumes:
     postgres_data:

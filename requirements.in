@@ -1,5 +1,6 @@
 bcrypt
 Flask
+Flask-CORS
 gunicorn
 pip-tools
 psycopg2-binary

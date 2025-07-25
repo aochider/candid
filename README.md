@@ -31,9 +31,10 @@ Use the `api` container shell to update dependencies and generate a lockfile fro
 
 Use the `api` container shell to run migrations. This will delete all of your tables and data: from the `/app` directory, run `python3 database/reset_hard.py`.
 
+Use the `api` container shell to load test data. This will do inserts without any other preparation, so you might want to run the reset script above first: from the `/app` directory, run `python3 database/load_test_data.py`.
+
 # TODO
 
-* Make script to load db with test data
 * Make sure gunicorn and Flask are set up correctly for prod (eg, not running at root)
 * Set up prod vs dev Dockerfile stages so we don't copy all files to prod and such
 * Set up Flask config

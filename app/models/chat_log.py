@@ -6,8 +6,8 @@ class ChatLog():
 		self.position_id = None
 		self.creator_user_id = None
 		self.responder_user_id = None
-		self.message = None
-		self.message_time = None
+		self.chat_log_time = None
+		self.status = None
 
 	def __repr__(self):
 		return '<ChatLog %r>' % self.id
