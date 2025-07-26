@@ -28,4 +28,7 @@ def create_app():
 	from app.controllers.chat_log_message import register_routes as chat_log_message_register_routes
 	chat_log_message_register_routes(app)
 
+	from app.controllers.position import register_routes as position_register_routes
+	position_register_routes(app)
+
 	return app
