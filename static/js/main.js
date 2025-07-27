@@ -1,3 +1,5 @@
+const API_URL = "http://localhost:8000";
+
 var main = function() {
     const urlParams = new URLSearchParams(window.location.search);
 	var path = urlParams.get("path");
