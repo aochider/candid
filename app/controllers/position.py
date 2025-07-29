@@ -19,6 +19,5 @@ def register_routes(app):
 		user_id = 4
 
 		data = request.get_json()
-		print(data, flush=True)
 		position = UserPosition.respond(user_id, position_id, data['result'])
 		return {'success': True}

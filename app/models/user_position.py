@@ -14,7 +14,6 @@ class UserPosition():
 
 	@staticmethod
 	def respond(user_id, position_id, result):
-		print(user_id, position_id, result, flush=True)
 		execute_query(
 			"insert into \"user_position\" (user_id, position_id, result)"
 			" values (%s, %s, %s)"

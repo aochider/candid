@@ -21,6 +21,7 @@ class Position():
 		limit = 10
 		positions = map_query_to_class(execute_query(
 			# TODO come up with something other than random order
+			# TODO2 think of another way instead of the `not in`, thats gonna be slow and might hit a limit
 			"select * from \"position\""
 			" where \"position\".status = 'active' and \"position\".creator_user_id != %s and \"position\".id not in"
 			" (select position_id from \"user_position\" where user_id=%s)"
