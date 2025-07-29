@@ -49,6 +49,7 @@ def map_query_to_class(rows, target_class):
 			instance = target_class()
 
 			# Map column values to instance variables by name
+			print(row.items(), flush=True)
 			for col, val in row.items():
 				# TODO use reflection to make this safer. we only want to map to attributes that are actually
 				# on the class. better yet, we should find a way to flag attributes as being mapped from the db.

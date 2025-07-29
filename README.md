@@ -33,6 +33,9 @@ Use the `api` container shell to run migrations. This will delete all of your ta
 
 Use the `api` container shell to load test data. This will do inserts without any other preparation, so you might want to run the reset script above first: from the `/app` directory, run `python3 database/load_test_data.py`.
 
+# Accessing postgres directly
+
+Exec into the `db` container and then run `psql --username=user mydatabase`. You can then use `psql` commands like `\l`, `\dt`, and so forth.
 # TODO
 
 * Make sure gunicorn and Flask are set up correctly for prod (eg, not running at root)

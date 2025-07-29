@@ -22,9 +22,8 @@ class Position():
 		positions = map_query_to_class(execute_query(
 			# TODO come up with something other than random order
 			"select * from \"position\""
-			" left join \"user_position\" on \"user_position\".position_id = \"position\".id"
-			" and \"user_position\".user_id = %s"
-			" where \"position\".status = 'active' and \"position\".creator_user_id != %s and \"user_position\".position_id is null"
+			" where \"position\".status = 'active' and \"position\".creator_user_id != %s and \"position\".id not in"
+			" (select position_id from \"user_position\" where user_id=%s)"
 			" order by random() limit %s", (user_id, user_id, limit)
 		), Position)
 		return positions
