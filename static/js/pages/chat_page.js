@@ -34,10 +34,8 @@ var ChatPage = function() {
 
 		getMessages().then(function(data) {
 			var messages = data.messages;
-			messageBox.textContent += JSON.stringify(messages);
-			if (messages[messages.length - 1]) {
-				lastMessageId = messages[messages.length - 1].id;
-			}
+			messageBox.textContent += messages.length ? JSON.stringify(messages) : "";
+			lastMessageId = messages[messages.length - 1]?.id ?? lastMessageId;
 			startPollMessages();
 		});
 	};
@@ -116,10 +114,8 @@ var ChatPage = function() {
 	var startPollMessages = function() {
 		pollMessages().then(function(data) {
 			var messages = data.messages;
-			messageBox.textContent += JSON.stringify(messages);
-			if (messages[messages.length - 1]) {
-				lastMessageId = messages[messages.length - 1].id;
-			}
+			messageBox.textContent += messages.length ? JSON.stringify(messages) : "";
+			lastMessageId = messages[messages.length - 1]?.id ?? lastMessageId;
 			startPollMessages();
 		});
 	};

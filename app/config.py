@@ -3,7 +3,7 @@ import os
 class Config:
 	SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'postgresql://user:password@db:5432/mydatabase')
 	SQLALCHEMY_TRACK_MODIFICATIONS = False
-	LONG_POLL_TIMEOUT = 60
+	LONG_POLL_TIMEOUT = 10
 
 class DevelopmentConfig(Config):
 	DEV = True

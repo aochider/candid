@@ -16,7 +16,6 @@ def register_routes(app):
 		start_time = time.time()
 
 		while ((time.time() - start_time) < timeout):
-			print('test', flush=True)
 			count = ChatLogMessage.get_count_since(chat_log_id, message_id_offset)
 
 			if count > 0:
@@ -25,6 +24,8 @@ def register_routes(app):
 				return {"messages": messages}
 			else:
 				time.sleep(1)
+
+		return {"messages": []}
 
 	@app.route('/chat_log_message/chat_log/<int:chat_log_id>', methods=['POST'])
 	def create_chat_log_messages(chat_log_id):
