@@ -19,6 +19,13 @@ class ChatLogMessage():
 		return messages
 
 	@staticmethod
+	def create(chat_log_id, user_id, message):
+		id = execute_query(
+			"insert into \"chat_log_message\" (chat_log_id, user_id, message) values (%s, %s, %s) returning id", (chat_log_id, user_id, message)
+		)
+		return id
+
+	@staticmethod
 	def get_count_since(chat_log_id, message_id_offset):
 		count = execute_query(
 			"select count(*) from \"chat_log_message\" where chat_log_id=%s and id > %s", (chat_log_id, message_id_offset)

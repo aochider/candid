@@ -17,6 +17,6 @@ class UserPosition():
 		execute_query(
 			"insert into \"user_position\" (user_id, position_id, result)"
 			" values (%s, %s, %s)"
-			" on conflict (id) do update set result = excluded.result", (user_id, position_id, result)
+			" on conflict (id) do update set result = excluded.result returning id", (user_id, position_id, result)
 		)
 		return True

@@ -31,4 +31,7 @@ def create_app():
 	from app.controllers.position import register_routes as position_register_routes
 	position_register_routes(app)
 
+	from app.controllers.user_position import register_routes as user_position_register_routes
+	user_position_register_routes(app)
+
 	return app

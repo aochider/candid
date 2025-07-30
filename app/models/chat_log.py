@@ -13,15 +13,8 @@ class ChatLog():
 		return '<ChatLog %r>' % self.id
 
 	@staticmethod
-	def get(position_id, responder_user_id, message_id_offset=0):
-		messages = map_query_to_class(execute_query(
-			"select * from \"chat_log\" where position_id=%s and responder_user_id=%s and id > %s", (position_id, responder_user_id, message_id_offset)
-		), ChatLog)
-		return messages
-
-	@staticmethod
-	def get_count_since(position_id, responder_user_id, message_id_offset):
-		count = execute_query(
-			"select count(*) from \"chat_log\" where position_id=%s and responder_user_id=%s and id > %s", (position_id, responder_user_id, message_id_offset)
+	def create(position_id, responder_user_id):
+		id = execute_query(
+			"insert into \"chat_log\" (position_id, responder_user_id, status) values (%s, %s, 'pending') returning id", (position_id, responder_user_id)
 		)
-		return count[0]['count']
+		return id

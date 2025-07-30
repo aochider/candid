@@ -13,7 +13,6 @@ var PositionsPage = function() {
 	var constructor = function() {
 		container = document.createElement("div");
 		container.className = "positions-page";
-		pub.container = container;
 
 		loading = document.createElement("div");
 		loading.className = "loading";
@@ -54,7 +53,9 @@ var PositionsPage = function() {
 		chat.textContent = "chat";
 		chat.onclick = function() {
 			respond('chat').then(function(data) {
-				console.log('TODO nav to chat');
+				doChat().then(function(data2) {
+					window.location.search = "?path=/chat&chat_log_id=" + data2.id;
+				});
 			});
 		};
 		container.appendChild(chat);
@@ -75,7 +76,7 @@ var PositionsPage = function() {
 	};
 
 	pub.getContainer = function() {
-		return pub.container;
+		return container;
 	};
 
 	pub.hideLoading = function() {
@@ -96,12 +97,6 @@ var PositionsPage = function() {
 	};
 
 	var getPositions = async function() {
-		/*
-		const dataToSend = {
-			name: 'John Doe',
-			email: 'john.doe@example.com'
-		};*/
-
 		try {
 			const response = await fetch(`${API_URL}/position/queue`, {
 				method: 'GET',
@@ -128,7 +123,32 @@ var PositionsPage = function() {
 		};
 
 		try {
-			const response = await fetch(`${API_URL}/position/${currentPosition.id}/respond`, {
+			const response = await fetch(`${API_URL}/user_position/position/${currentPosition.id}/respond`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(dataToSend)
+			});
+
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+
+			const responseData = await response.json();
+			return responseData;
+		} catch (error) {
+			throw error;
+		}
+	};
+
+	var doChat = async function() {
+		const dataToSend = {
+		};
+
+		try {
+			console.log('test');
+			const response = await fetch(`${API_URL}/chat_log/position/${currentPosition.id}`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
