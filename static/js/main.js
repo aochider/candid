@@ -3,8 +3,6 @@ const API_URL = "http://localhost:8000";
 var main = function() {
     const urlParams = new URLSearchParams(window.location.search);
 	var path = urlParams.get("path");
-	console.log("path is", path);
-
 	var body = document.getElementsByTagName("body")[0];
 
 	switch (path) {

@@ -1,0 +1,7 @@
+.header {
+	background-color: #ffffff;
+	filter: drop-shadow(5px 5px 10px rgba(0, 0, 0, 0.5));
+	height: 4em;
+	padding: 1em;
+	width: 100%;
+}

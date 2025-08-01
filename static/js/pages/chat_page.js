@@ -27,7 +27,6 @@ var ChatPage = function() {
 		messageSubmit.textContent = "SEND";
 		messageSubmit.onclick = function() {
 			sendMessage(messageInput.value).then(function(data) {
-				console.log(data);
 			});
 		};
 		container.appendChild(messageSubmit);
