@@ -1,6 +1,7 @@
 import bcrypt
 from datetime import datetime, timedelta, timezone
 import jwt
+import uuid
 
 from app.database import execute_query, map_query_to_class
 
@@ -9,8 +10,18 @@ class User():
 	TOKEN_SECRET = None
 	# filled in at startup
 	TOKEN_LIFESPAN_MIN = None
+	TOKEN_ALGO = 'HS256'
 	PASSWORD_HASH_ROUNDS = 14
-	USER_TYPES = ['normal', 'mod', 'admin', 'guest']
+	USER_ROLE_GUEST = 'guest'
+	USER_ROLE_NORMAL = 'normal'
+	USER_ROLE_MOD = 'mod'
+	USER_ROLE_ADMIN = 'admin'
+	USER_ROLE_RANKING = {
+		USER_ROLE_GUEST: 1,
+		USER_ROLE_NORMAL: 10,
+		USER_ROLE_MOD: 20,
+		USER_ROLE_ADMIN: 30,
+	}
 
 	def __init__(self):
 		self.id = None
@@ -18,7 +29,7 @@ class User():
 		self.email = None
 		self.display_name = None
 		self.password_hash = None
-		self.user_type = None
+		self.role = None
 		self.created_time = None
 		# TODO probably want to verify the email
 		self.verified_time = None
@@ -27,19 +38,16 @@ class User():
 		return '<User %r>' % self.username
 
 	def create_token(self):
-		# TODO add other stuff to the payload, such as issue time
+		now = datetime.now(timezone.utc)
 		payload = {
 			"user_id": self.id,
 			"email": self.email,
-			"exp": datetime.now(timezone.utc) + timedelta(minutes=self.__class__.TOKEN_LIFESPAN_MIN) # Expiration time
+			"sub": str(self.id),
+			"iat": now,
+			"exp": now + timedelta(minutes=User.TOKEN_LIFESPAN_MIN),
+			"jti": str(uuid.uuid4()),
 		}
-		secret_key = self.__class__.TOKEN_SECRET
-		algorithm = "HS256"
-
-		return jwt.encode(payload, secret_key, algorithm=algorithm)
-
-	def set_password(self, password):
-		self.password_hash = bcrypt.hashpw(password, bcrypt.gensalt(PASSWORD_HASH_ROUNDS))
+		return jwt.encode(payload, User.TOKEN_SECRET, algorithm=User.TOKEN_ALGO)
 
 	def does_password_match(self, password):
 		return bcrypt.checkpw(bytes(password, 'utf-8'), bytes(self.password_hash, 'utf-8'))
@@ -52,8 +60,8 @@ class User():
 
 	@staticmethod
 	def create_user():
-		password = b"password"  # Password must be in bytes
-		salt = bcrypt.gensalt(rounds=self.__class__.PASSWORD_HASH_ROUNDS)          # Generate a random salt
+		password = b"password"
+		salt = bcrypt.gensalt(rounds=User.PASSWORD_HASH_ROUNDS)
 		hashed_password = bcrypt.hashpw(bytes(password, 'utf-8'), salt)
 		id = 1
 
@@ -61,19 +69,23 @@ class User():
 
 	@staticmethod
 	def decode_token(token):
-		secret_key = User.TOKEN_SECRET
-		algorithm = "HS256"
-
 		try:
-			decoded_payload = jwt.decode(token, secret_key, algorithms=[algorithm])
+			decoded_payload = jwt.decode(token, User.TOKEN_SECRET, algorithms=User.TOKEN_ALGO)
 			return decoded_payload
-		except jwt.ExpiredSignatureError:
-			print("Token has expired.")
-		except jwt.InvalidTokenError:
-			print("Invalid token.")
+		except jwt.ExpiredSignatureError as e:
+			print("Token has expired.", flush=True)
+			raise e
+		except jwt.InvalidTokenError as e:
+			print("Invalid token.", flush=True)
+			raise e
 
 		# TODO throw exceptions that flask catches and returns correct http codes and messages wo leaking
 		return None
+
+	# use this to burn some time if we didnt find a user
+	@staticmethod
+	def fake_does_password_match():
+		return bcrypt.checkpw(bytes('0123456789', 'utf-8'), bytes('9876543210', 'utf-8'))
 
 	@staticmethod
 	def get_all_users():
@@ -88,6 +100,12 @@ class User():
 	@staticmethod
 	def get_by_token(token):
 		decoded_token = User.decode_token(token)
+
+		now = datetime.now(timezone.utc)
+		token_exp = datetime.fromtimestamp(decoded_token['exp'], tz=timezone.utc)
+		if token_exp < now:
+			raise Exception('invalid token')
+
 		email = decoded_token['email']
 		users = map_query_to_class(execute_query("select * from \"user\" where email=%s", (email,)), User)
 		return users[0]

@@ -43,5 +43,6 @@ Exec into the `db` container and then run `psql --username=user mydatabase`. You
 * Set up prod vs dev Dockerfile stages so we don't copy all files to prod and such
 * Set up Flask config
 * Set up logging
+* Add rate limiting
 * Set up load tests
 * Set up unit tests

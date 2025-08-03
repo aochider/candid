@@ -2,6 +2,7 @@ bcrypt
 Flask
 Flask-CORS
 gunicorn
+jsonschema
 pip-tools
 psycopg2-binary
 PyJWT

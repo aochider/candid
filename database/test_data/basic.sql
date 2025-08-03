@@ -1,4 +1,4 @@
-insert into "user" (username, email, display_name, password_hash, user_type) values
+insert into "user" (username, email, display_name, password_hash, role) values
 -- password_hash plaintext for all users is password
 ('admin', 'admin@admin.com', 'ADMIN', '$2b$14$if1z65maFt6mCfp9Vd5MNe1IgSwFQkoni3fSv/kun3mqFIyjcjvBS', 'admin'),
 ('mod', 'mod@mod.com', 'MOD', '$2b$14$UVmTa8GWhZDW.z9mSfICcuSYaHb5lqX/b3YOv4jdEHPpcNWca57G2', 'moderator'),
