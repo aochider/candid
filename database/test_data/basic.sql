@@ -1,8 +1,9 @@
 insert into "user" (username, email, display_name, password_hash, user_type) values
-('admin', 'admin@admin.com', 'ADMIN', 'abc', 'admin'),
-('mod', 'mod@mod.com', 'MOD', 'abc', 'moderator'),
-('foo', 'foo@foo.com', 'FOO', 'abc', 'normal'),
-('bar', 'bar@bar.com', 'BAR', 'abc', 'normal')
+-- password_hash plaintext for all users is password
+('admin', 'admin@admin.com', 'ADMIN', '$2b$14$if1z65maFt6mCfp9Vd5MNe1IgSwFQkoni3fSv/kun3mqFIyjcjvBS', 'admin'),
+('mod', 'mod@mod.com', 'MOD', '$2b$14$UVmTa8GWhZDW.z9mSfICcuSYaHb5lqX/b3YOv4jdEHPpcNWca57G2', 'moderator'),
+('foo', 'foo@foo.com', 'FOO', '$2b$14$BGFudQyn/UMC4tRwM3VNjO6zkVzj6OdMj7.lYbduOgw//V/goQGj.', 'normal'),
+('bar', 'bar@bar.com', 'BAR', '$2b$14$dit6JMSilzI1j1MoQlV9XezmokFsRRLKeWvCgg2Pc5hBZF0g0qBwe', 'normal')
 ;
 
 insert into "position" (creator_user_id, position_category_id, location_id, statement, status) values

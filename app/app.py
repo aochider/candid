@@ -5,10 +5,12 @@ from flask_cors import CORS
 import psycopg2
 from app.config import DevelopmentConfig, ProductionConfig
 from app.database import connect_to_db
+from app.models.user import User
 
 def create_app():
 	app = Flask(__name__)
 
+	# TODO is this safe to always have on?
 	CORS(app)
 	
 	flask_env = os.environ.get('FLASK_ENV')
@@ -18,6 +20,9 @@ def create_app():
 		app.config.from_object(ProductionConfig)
 
 	connect_to_db(app.config)
+
+	User.TOKEN_SECRET = app.config['TOKEN_SECRET']
+	User.TOKEN_LIFESPAN_MIN = app.config['TOKEN_LIFESPAN_MIN']
 	
 	from app.controllers.user import register_routes as user_register_routes
 	user_register_routes(app)
