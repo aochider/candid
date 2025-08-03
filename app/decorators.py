@@ -4,15 +4,18 @@ from flask import request
 
 from app.models.user import User
 
-def auth(min_role=User.USER_ROLE_GUEST):
+def auth(min_role):
 	def decorator(f):
 		@wraps(f)
 		def decorated_function(*args, **kwargs):
 			try:
 				token = request.headers.get('Authorization', '').split(' ')[1]
 				user = User.get_by_token(token)
-				minimum_role = kwargs.get('min_role', User.USER_ROLE_GUEST)
-				minimum_role_rank = User.USER_ROLE_RANKING.get(minimum_role, 0)
+				minimum_role = kwargs.get('min_role')
+				minimum_role_rank = User.USER_ROLE_RANKING.get(minimum_role)
+				if not minimum_role_rank:
+					raise Exception('insufficient authorization')
+
 				current_role_rank = User.USER_ROLE_RANKING.get(user.role, -1)
 
 				if current_role_rank < minimum_role_rank:
