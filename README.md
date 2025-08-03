@@ -38,7 +38,7 @@ Use the `api` container shell to load test data. This will do inserts without an
 Exec into the `db` container and then run `psql --username=user mydatabase`. You can then use `psql` commands like `\l`, `\dt`, and so forth.
 # TODO
 
-* Make sure gunicorn is configured to handle many long polling connections (gunicorn worker type?)
+* Make sure gunicorn and postgres are configured to handle many long polling connections (gunicorn worker type?)
 * Make sure gunicorn and Flask are set up correctly for prod (eg, not running at root)
 * Set up prod vs dev Dockerfile stages so we don't copy all files to prod and such
 * Set up Flask config

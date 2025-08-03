@@ -1,4 +1,5 @@
 .positions-page {
+	height: 100%;
 	margin-top: 8em;
 }
 
@@ -15,7 +16,7 @@
 }
 
 .positions-page .card .respond {
-	background-color: #FFB8FF;
+	background-color: var(--secondary-color);
 	border-radius: 4em;
 	color: #ffffff;
 	font-weight: bold;
