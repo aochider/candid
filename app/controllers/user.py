@@ -1,16 +1,9 @@
 from flask import request
 
-from app.models.user import User
 from app.decorators import auth, validate
+from app.models.user import User
 
 def register_routes(app):
-	@app.route('/user')
-	@auth(min_role=User.USER_ROLE_NORMAL)
-	def get_users():
-		users = User.get_all_users()
-		user_list = [{"username": user.username, "email": user.email} for user in users]
-		return {"users": user_list}
-
 	@app.route('/user', methods=['POST'])
 	@validate({
 		"type": "object",
@@ -55,4 +48,4 @@ def register_routes(app):
 		else:
 			raise Exception("invalid credentials")
 
-		return {"id": stored_user.id, "jwt": jwt}
+		return {"id": stored_user.id, "token": jwt}

@@ -40,8 +40,6 @@ class User():
 	def create_token(self):
 		now = datetime.now(timezone.utc)
 		payload = {
-			"user_id": self.id,
-			"email": self.email,
 			"sub": str(self.id),
 			"iat": now,
 			"exp": now + timedelta(minutes=User.TOKEN_LIFESPAN_MIN),
@@ -51,12 +49,6 @@ class User():
 
 	def does_password_match(self, password):
 		return bcrypt.checkpw(bytes(password, 'utf-8'), bytes(self.password_hash, 'utf-8'))
-
-	@staticmethod
-	def authenticate():
-		token = request.cookies.get('token')
-		user = User.get_by_token(token)
-		return user
 
 	@staticmethod
 	def create_user():
@@ -106,6 +98,6 @@ class User():
 		if token_exp < now:
 			raise Exception('invalid token')
 
-		email = decoded_token['email']
-		users = map_query_to_class(execute_query("select * from \"user\" where email=%s", (email,)), User)
+		user_id = decoded_token['sub']
+		users = map_query_to_class(execute_query("select * from \"user\" where id=%s", (user_id,)), User)
 		return users[0]

@@ -48,6 +48,7 @@ var ChatPage = function() {
 			const response = await fetch(`${API_URL}/chat_log_message/chat_log/${chatLogId}`, {
 				method: 'GET',
 				headers: {
+					'Authorization': `Bearer ${(await window.cookieStore.get("token")).value}`,
 					'Content-Type': 'application/json'
 				},
 				body: undefined, //JSON.stringify(dataToSend)
@@ -73,6 +74,7 @@ var ChatPage = function() {
 			const response = await fetch(`${API_URL}/chat_log_message/chat_log/${chatLogId}`, {
 				method: 'POST',
 				headers: {
+					'Authorization': `Bearer ${(await window.cookieStore.get("token")).value}`,
 					'Content-Type': 'application/json'
 				},
 				body: JSON.stringify(dataToSend)
@@ -94,6 +96,7 @@ var ChatPage = function() {
 			const response = await fetch(`${API_URL}/chat_log_message/chat_log/${chatLogId}/message_offset/${lastMessageId}`, {
 				method: 'GET',
 				headers: {
+					'Authorization': `Bearer ${(await window.cookieStore.get("token")).value}`,
 					'Content-Type': 'application/json'
 				},
 				body: undefined, //JSON.stringify(dataToSend)

@@ -14,6 +14,10 @@ var main = function() {
 			var page = ChatPage();
 			body.appendChild(page.getContainer());
 			break;
+		case '/login':
+			var page = LoginPage();
+			body.appendChild(page.getContainer());
+			break;
 	}
 };
 

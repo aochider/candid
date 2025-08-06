@@ -107,6 +107,7 @@ var PositionsPage = function() {
 			const response = await fetch(`${API_URL}/position/queue`, {
 				method: 'GET',
 				headers: {
+					'Authorization': `Bearer ${(await window.cookieStore.get("token")).value}`,
 					'Content-Type': 'application/json'
 				},
 				body: undefined, //JSON.stringify(dataToSend)
@@ -132,6 +133,7 @@ var PositionsPage = function() {
 			const response = await fetch(`${API_URL}/user_position/position/${currentPosition.id}/respond`, {
 				method: 'POST',
 				headers: {
+					'Authorization': `Bearer ${(await window.cookieStore.get("token")).value}`,
 					'Content-Type': 'application/json'
 				},
 				body: JSON.stringify(dataToSend)
@@ -156,6 +158,7 @@ var PositionsPage = function() {
 			const response = await fetch(`${API_URL}/chat_log/position/${currentPosition.id}`, {
 				method: 'POST',
 				headers: {
+					'Authorization': `Bearer ${(await window.cookieStore.get("token")).value}`,
 					'Content-Type': 'application/json'
 				},
 				body: JSON.stringify(dataToSend)
