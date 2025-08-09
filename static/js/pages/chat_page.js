@@ -27,6 +27,11 @@ var ChatPage = function() {
 		messageSubmit.textContent = "SEND";
 		messageSubmit.onclick = function() {
 			sendMessage(messageInput.value).then(function(data) {
+				console.log("sent!", data);
+			})
+			.catch(function(err) {
+				console.log(err);
+				window.location.search = `?path=/login`;
 			});
 		};
 		container.appendChild(messageSubmit);
@@ -36,6 +41,10 @@ var ChatPage = function() {
 			messageBox.textContent += messages.length ? JSON.stringify(messages) : "";
 			lastMessageId = messages[messages.length - 1]?.id ?? lastMessageId;
 			startPollMessages();
+		})
+		.catch(function(err) {
+			console.log(err);
+			window.location.search = `?path=/login`;
 		});
 	};
 
@@ -119,6 +128,10 @@ var ChatPage = function() {
 			messageBox.textContent += messages.length ? JSON.stringify(messages) : "";
 			lastMessageId = messages[messages.length - 1]?.id ?? lastMessageId;
 			startPollMessages();
+		})
+		.catch(function(err) {
+			console.log(err);
+			window.location.search = `?path=/login`;
 		});
 	};
 

@@ -11,9 +11,8 @@ def register_routes(app):
 	@validate({
 		"type": "object",
 		"properties": {
-			"result": {"type": "string"}
 		},
-		"required": ["result"],
+		"required": [],
 	})
 	def create(position_id):
 		responder_user_id = request.user.id

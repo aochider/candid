@@ -1,6 +1,9 @@
 var LoginPage = function() {
 	var pub = {};
 	var container;
+	var card;
+	var logo;
+	var form;
 	var emailInput;
 	var passwordInput;
 	var loginSubmit;
@@ -9,28 +12,44 @@ var LoginPage = function() {
 		container = document.createElement("div");
 		container.className = "login-page";
 
-		emailInput = document.createElement("input");
-		emailInput.type = "email";
-		emailInput.placeholder = "Email";
-		emailInput.className = "email-input";
-		container.appendChild(emailInput);
+		card = document.createElement("div");
+		card.className = "card";
+		container.appendChild(card);
 
-		passwordInput = document.createElement("input");
-		passwordInput.type = "password";
-		passwordInput.placeholder = "Password";
-		passwordInput.className = "password-input";
-		container.appendChild(passwordInput);
+		logo = document.createElement("div");
+		logo.className = "logo";
+		logo.textContent = "Candid";
+		card.appendChild(logo);
 
-		loginSubmit = document.createElement("button");
-		loginSubmit.className = "login-submit";
-		loginSubmit.textContent = "LOGIN";
-		loginSubmit.onclick = function() {
+		form = document.createElement("form");
+		form.className = "form";
+		form.onsubmit = function() {
 			login(emailInput.value, passwordInput.value).then(function(data) {
 				window.cookieStore.set("token", data.token);
 				window.location.search = `?path=/positions`;
 			});
 		};
-		container.appendChild(loginSubmit);
+		card.appendChild(form);
+
+		emailInput = document.createElement("input");
+		emailInput.type = "email";
+		emailInput.placeholder = "Email";
+		emailInput.className = "email-input";
+		emailInput.name = "email";
+		form.appendChild(emailInput);
+
+		passwordInput = document.createElement("input");
+		passwordInput.type = "password";
+		passwordInput.placeholder = "Password";
+		passwordInput.className = "password-input";
+		passwordInput.name = "password";
+		form.appendChild(passwordInput);
+
+		loginSubmit = document.createElement("input");
+		loginSubmit.type = "submit";
+		loginSubmit.className = "login-submit";
+		loginSubmit.value = "LOGIN";
+		form.appendChild(loginSubmit);
 	};
 
 	pub.getContainer = function() {

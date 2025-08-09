@@ -63,7 +63,15 @@ var PositionsPage = function() {
 			respond('chat').then(function(data) {
 				doChat().then(function(data2) {
 					window.location.search = `?path=/chat&chat_log_id=${data2.id}`;
+				})
+				.catch(function(err) {
+					console.log(err);
+					window.location.search = `?path=/login`;
 				});
+			})
+			.catch(function(err) {
+				console.log(err);
+				window.location.search = `?path=/login`;
 			});
 		};
 		card.appendChild(chat);
@@ -75,6 +83,7 @@ var PositionsPage = function() {
 		})
 		.catch(function(err) {
 			console.log(err);
+			window.location.search = `?path=/login`;
 		})
 		.finally(function() {
 			pub.hideLoading();
