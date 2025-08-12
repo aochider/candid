@@ -19,3 +19,26 @@ def register_routes(app):
 		# TODO validate user_id and position_id
 		id = ChatLog.create(position_id, responder_user_id)
 		return {"id": id}
+
+	@app.route('/chat_log/<int:chat_log_id>', methods=['GET'])
+	@auth(min_role=User.USER_ROLE_NORMAL)
+	def get_by_id(chat_log_id):
+		user_id = request.user.id
+		# TODO validate user_id has access to chat log
+		chat_log = ChatLog.get_by_id(chat_log_id)
+		# TODO check len
+		ret = {
+			"id": chat_log[0].id,
+			"position_id": chat_log[0].position_id,
+			"creator_user_id": chat_log[0].creator_user_id,
+			"statement": chat_log[0].statement
+		}
+		return ret
+
+	@app.route('/chat_log', methods=['GET'])
+	@auth(min_role=User.USER_ROLE_NORMAL)
+	def get_by_user_id():
+		user_id = request.user.id
+		chat_logs = ChatLog.get_by_user_id(user_id)
+		logs = [{"id": cl.id} for cl in chat_logs]
+		return {"chat_logs": logs}

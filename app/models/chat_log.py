@@ -18,3 +18,17 @@ class ChatLog():
 			"insert into \"chat_log\" (position_id, responder_user_id, status) values (%s, %s, 'pending') returning id", (position_id, responder_user_id)
 		)
 		return id
+
+	@staticmethod
+	def get_by_id(chat_log_id):
+		chat_logs = map_query_to_class(execute_query(
+			"select * from \"chat_log\" join \"position\" on \"position\".id=\"chat_log\".position_id where \"chat_log\".id=%s", (chat_log_id,)
+		), ChatLog)
+		return chat_logs
+
+	@staticmethod
+	def get_by_user_id(user_id):
+		chat_logs = map_query_to_class(execute_query(
+			"select * from \"chat_log\" join \"position\" on \"position\".id=\"chat_log\".position_id where \"position\".creator_user_id=%s or \"chat_log\".responder_user_id=%s", (user_id, user_id)
+		), ChatLog)
+		return chat_logs

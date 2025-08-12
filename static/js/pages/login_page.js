@@ -23,11 +23,15 @@ var LoginPage = function() {
 
 		form = document.createElement("form");
 		form.className = "form";
+		form.method = "POST";
 		form.onsubmit = function() {
 			login(emailInput.value, passwordInput.value).then(function(data) {
+				window.cookieStore.set("user_id", data.id);
 				window.cookieStore.set("token", data.token);
 				window.location.search = `?path=/positions`;
 			});
+
+			return false;
 		};
 		card.appendChild(form);
 
