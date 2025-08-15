@@ -196,6 +196,7 @@ var ChatPage = function() {
 			bubble.setMessage(message.message);
 			messageBox.appendChild(bubble.getContainer());
 			lastMessageId = message.id;
+			window.scrollTo(0, document.body.scrollHeight);
 		}
 	};
 
