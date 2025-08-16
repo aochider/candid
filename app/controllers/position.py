@@ -12,7 +12,6 @@ def register_routes(app):
 	@auth(min_role=User.USER_ROLE_NORMAL)
 	def get_position_queue():
 		user_id = request.user.id
-		# TODO validate user_id
 		positions = Position.get_queue(user_id)
 		positions = [{"id": pos.id, "statement": pos.statement} for pos in positions]
 		return {"positions": positions}

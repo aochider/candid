@@ -17,4 +17,7 @@ INVALID_USER_POSITION_POSITION = ValidationException(20001, 'must be a valid pos
 INVALID_USER_LOGIN = ValidationException(30001, 'must be a valid email and password')
 INVALID_USER_TOKEN = ValidationException(30002, 'must be a valid token')
 
+INVALID_CHAT_LOG_ID = ValidationException(40001, 'must be a valid chat log')
+
+
 

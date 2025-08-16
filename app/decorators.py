@@ -13,7 +13,7 @@ def auth(min_role):
 				token = request.headers.get('Authorization', '').split(' ')[1]
 				user = User.get_by_token(token)
 				min_role_rank = User.USER_ROLE_RANKING.get(min_role)
-				print(min_role, min_role_rank, flush=True)
+
 				if not min_role_rank:
 					raise INVALID_CREDENTIALS
 

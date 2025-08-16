@@ -26,7 +26,7 @@ def register_routes(app):
 
 		user_id = request.user.id
 
-		if not Position.check_by_id(position_id):
+		if not Position.exists_by_id(position_id):
 			raise INVALID_USER_POSITION_POSITION
 
 		id = UserPosition.create(user_id, position_id, result)

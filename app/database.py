@@ -6,16 +6,13 @@ from app.errors import *
 db = None
 
 def connect_to_db(config):
-	"""Establishes a global database connection."""
 	global db
-	try:
-		db = psycopg2.connect(config['SQLALCHEMY_DATABASE_URI'])
-		print("Database connection established.")
-	except psycopg2.Error as ee:
-		raise ee
+
+	# let this fail if there is an error. we want the server to not start up if this doesnt work.
+	db = psycopg2.connect(config['SQLALCHEMY_DATABASE_URI'])
+	print("Database connection established.")
 
 def execute_query(query, params=None):
-	"""Executes a SQL query using the global connection."""
 	if db is None:
 		print("Database connection not established. Call connect_to_db() first.")
 		return None
@@ -31,14 +28,13 @@ def execute_query(query, params=None):
 			if is_insert:
 				retval = cur.fetchone()['id']
 
-			db.commit()  # Commit changes for DML operations
-			return retval  # No rows to fetch for DML
+			db.commit()
+			return retval
 	except psycopg2.Error as ee:
-		db.rollback()  # Rollback changes on error
+		db.rollback()
 		raise ee
 
 def close_db_connection():
-	"""Closes the global database connection."""
 	global db
 	if db:
 		db.close()
@@ -50,10 +46,8 @@ def map_query_to_class(rows, target_class):
 
 	if rows:
 		for row in rows:
-			# Create an instance of the target class
 			instance = target_class()
 
-			# Map column values to instance variables by name
 			for col, val in row.items():
 				# TODO use reflection to make this safer. we only want to map to attributes that are actually
 				# on the class. better yet, we should find a way to flag attributes as being mapped from the db.
