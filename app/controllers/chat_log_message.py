@@ -3,6 +3,7 @@ from flask import request
 
 from app.decorators import auth, validate
 from app.errors import *
+from app.models.chat_log import ChatLog
 from app.models.chat_log_message import ChatLogMessage
 from app.models.user import User
 
@@ -22,7 +23,7 @@ def register_routes(app):
 		if user_id not in [chat_log.creator_user_id, chat_log.responder_user_id]:
 			raise INVALID_CHAT_LOG_ID
 
-		messages = ChatLogMessage.get(chat_log_id)
+		messages = ChatLogMessage.get_by_chat_log_id(chat_log_id)
 		messages = [{"id": msg.id, "chat_log_id": msg.chat_log_id, "user_id": msg.user_id, "message": msg.message} for msg in messages]
 		return {"messages": messages}
 
