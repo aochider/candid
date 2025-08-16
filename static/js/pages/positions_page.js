@@ -61,29 +61,28 @@ var PositionsPage = function() {
 		chat.textContent = "chat";
 		chat.onclick = function() {
 			respond('chat').then(function(data) {
-				doChat().then(function(data2) {
+				apiRequest(`/chat_log/position/${currentPosition.id}`, "POST", {}).then(function(data2) {
 					window.location.search = `?path=/chat&chat_log_id=${data2.id}`;
 				})
 				.catch(function(err) {
 					console.log(err);
-					window.location.search = `?path=/login`;
+					window.location.search = `?path=/login&error=${err}`;
 				});
 			})
 			.catch(function(err) {
 				console.log(err);
-				window.location.search = `?path=/login`;
+				window.location.search = `?path=/login&error=${err}`;
 			});
 		};
 		card.appendChild(chat);
 
-		let positions = getPositions();
-		positions.then(function(data) {
+		apiRequest("/position/queue", "GET").then(function(data) {
 			positionsQueue = data.positions;
 			pub.nextPosition();
 		})
 		.catch(function(err) {
 			console.log(err);
-			window.location.search = `?path=/login`;
+			window.location.search = `?path=/login&error=${err}`;
 		})
 		.finally(function() {
 			pub.hideLoading();
@@ -111,77 +110,8 @@ var PositionsPage = function() {
 		}
 	};
 
-	var getPositions = async function() {
-		try {
-			const response = await fetch(`${API_URL}/position/queue`, {
-				method: 'GET',
-				headers: {
-					'Authorization': `Bearer ${(await window.cookieStore.get("token")).value}`,
-					'Content-Type': 'application/json'
-				},
-				body: undefined, //JSON.stringify(dataToSend)
-			});
-
-			if (!response.ok) {
-				throw new Error(`HTTP error! status: ${response.status}`);
-			}
-
-			const responseData = await response.json();
-			return responseData;
-		} catch (error) {
-			throw error;
-		}
-	};
-
 	var respond = async function(result) {
-		const dataToSend = {
-			result: result,
-		};
-
-		try {
-			const response = await fetch(`${API_URL}/user_position/position/${currentPosition.id}/respond`, {
-				method: 'POST',
-				headers: {
-					'Authorization': `Bearer ${(await window.cookieStore.get("token")).value}`,
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(dataToSend)
-			});
-
-			if (!response.ok) {
-				throw new Error(`HTTP error! status: ${response.status}`);
-			}
-
-			const responseData = await response.json();
-			return responseData;
-		} catch (error) {
-			throw error;
-		}
-	};
-
-	var doChat = async function() {
-		const dataToSend = {
-		};
-
-		try {
-			const response = await fetch(`${API_URL}/chat_log/position/${currentPosition.id}`, {
-				method: 'POST',
-				headers: {
-					'Authorization': `Bearer ${(await window.cookieStore.get("token")).value}`,
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(dataToSend)
-			});
-
-			if (!response.ok) {
-				throw new Error(`HTTP error! status: ${response.status}`);
-			}
-
-			const responseData = await response.json();
-			return responseData;
-		} catch (error) {
-			throw error;
-		}
+		return apiRequest(`/user_position/position/${currentPosition.id}`, "POST", { result });
 	};
 
 	constructor();

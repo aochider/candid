@@ -1,7 +1,8 @@
 from functools import wraps
-from jsonschema import validate as jsvalidate, ValidationError
+from jsonschema import validate as jsvalidate, ValidationError as jsValidationError
 from flask import request
 
+from app.errors import *
 from app.models.user import User
 
 def auth(min_role):
@@ -14,19 +15,19 @@ def auth(min_role):
 				min_role_rank = User.USER_ROLE_RANKING.get(min_role)
 				print(min_role, min_role_rank, flush=True)
 				if not min_role_rank:
-					raise Exception('insufficient authorization')
+					raise INVALID_CREDENTIALS
 
 				current_role_rank = User.USER_ROLE_RANKING.get(user.role, -1)
 
 				if current_role_rank < min_role_rank:
-					raise Exception('insufficient authorization')
+					raise INVALID_CREDENTIALS
 
 				request.user = user
-			except Exception as e:
-				print('auth decorator exception', e, flush=True)
+			except Exception as ee:
+				print('auth decorator exception', ee, flush=True)
 				import traceback
 				traceback.print_exc()
-				return {"error": "Invalid credentials"}, 400
+				raise INVALID_CREDENTIALS from ee
 
 			return f(*args, **kwargs)
 
@@ -41,16 +42,12 @@ def validate(schema):
 			try:
 				data = request.json
 				jsvalidate(instance=data, schema=schema)
-			except ValidationError as e:
-				print(e, flush=True)
-				import traceback
-				traceback.print_exc()
-				return {"error": e.message}, 400
-			except Exception as e: # Handle cases where JSON is invalid or not present
-				print(e, flush=True)
-				import traceback
-				traceback.print_exc()
-				return {"error": "Invalid JSON or missing payload"}, 400
+			except jsValidationError as ee:
+				ee2 = INVALID_JSON_SCHEMA
+				ee2.message = ee.message
+				raise ee2 from ee
+			except Exception as ee: # Handle cases where JSON is invalid or not present
+				raise INVALID_JSON_BODY from ee
 
 			return f(*args, **kwargs)
 

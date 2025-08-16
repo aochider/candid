@@ -38,44 +38,46 @@ var ChatPage = function() {
 		form = document.createElement("form");
 		form.action = "POST";
 		form.onsubmit = function() {
-			sendMessage(messageInput.value).then(function(data) {
+			apiRequest(`/chat_log_message/chat_log/${chatLogId}`, "POST", {"message": messageInput.value}).then(function(data) {
 				console.log("sent!", data);
+				messageInput.value = "";
 			})
 			.catch(function(err) {
 				console.log(err);
-				window.location.search = `?path=/login`;
+				window.location.search = `?path=/login&error=${err}`;
 			});
 
 			return false;
 		};
 		inputBox.appendChild(form);
 
-		messageInput = document.createElement("textarea");
+		messageInput = document.createElement("input");
 		messageInput.className = "message-input";
 		messageInput.name = "message";
+		messageInput.placeholder = "Type a message here...";
+		messageInput.type = "text";
 		form.appendChild(messageInput);
 
 		messageSubmit = document.createElement("input");
 		messageSubmit.type = "submit";
 		messageSubmit.className = "message-submit";
-		messageSubmit.value = "SEND";
+		messageSubmit.value = "❯";
 		form.appendChild(messageSubmit);
 
-		getChatLog().then(function(data) {
-			var chatLog = data;
+		apiRequest(`/chat_log/${chatLogId}`, "GET").then(function(data) {
 			card.textContent = data.statement;
 		})
 		.catch(function(err) {
 			console.log(err);
-			window.location.search = `?path=/login`;
+			window.location.search = `?path=/login&error=${err}`;
 		});
-		getMessages().then(function(data) {
+		apiRequest(`/chat_log_message/chat_log/${chatLogId}`, "GET").then(function(data) {
 			renderMessages(data.messages);
 			startPollMessages();
 		})
 		.catch(function(err) {
 			console.log(err);
-			window.location.search = `?path=/login`;
+			window.location.search = `?path=/login&error=${err}`;
 		});
 	};
 
@@ -83,96 +85,8 @@ var ChatPage = function() {
 		return container;
 	};
 
-	var getMessages = async function() {
-		try {
-			const response = await fetch(`${API_URL}/chat_log_message/chat_log/${chatLogId}`, {
-				method: 'GET',
-				headers: {
-					'Authorization': `Bearer ${(await window.cookieStore.get("token")).value}`,
-					'Content-Type': 'application/json'
-				},
-				body: undefined, //JSON.stringify(dataToSend)
-			});
-
-			if (!response.ok) {
-				throw new Error(`HTTP error! status: ${response.status}`);
-			}
-
-			const responseData = await response.json();
-			return responseData;
-		} catch (error) {
-			throw error;
-		}
-	};
-
-	var getChatLog = async function() {
-		try {
-			const response = await fetch(`${API_URL}/chat_log/${chatLogId}`, {
-				method: 'GET',
-				headers: {
-					'Authorization': `Bearer ${(await window.cookieStore.get("token")).value}`,
-					'Content-Type': 'application/json'
-				},
-				body: undefined, //JSON.stringify(dataToSend)
-			});
-
-			if (!response.ok) {
-				throw new Error(`HTTP error! status: ${response.status}`);
-			}
-
-			const responseData = await response.json();
-			return responseData;
-		} catch (error) {
-			throw error;
-		}
-	};
-
-	var sendMessage = async function(message) {
-		const dataToSend = {
-			message: message,
-		};
-
-		try {
-			const response = await fetch(`${API_URL}/chat_log_message/chat_log/${chatLogId}`, {
-				method: 'POST',
-				headers: {
-					'Authorization': `Bearer ${(await window.cookieStore.get("token")).value}`,
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(dataToSend)
-			});
-
-			if (!response.ok) {
-				throw new Error(`HTTP error! status: ${response.status}`);
-			}
-
-			const responseData = await response.json();
-			return responseData;
-		} catch (error) {
-			throw error;
-		}
-	};
-
 	var pollMessages = async function() {
-		try {
-			const response = await fetch(`${API_URL}/chat_log_message/chat_log/${chatLogId}/message_offset/${lastMessageId}`, {
-				method: 'GET',
-				headers: {
-					'Authorization': `Bearer ${(await window.cookieStore.get("token")).value}`,
-					'Content-Type': 'application/json'
-				},
-				body: undefined, //JSON.stringify(dataToSend)
-			});
-
-			if (!response.ok) {
-				throw new Error(`HTTP error! status: ${response.status}`);
-			}
-
-			const responseData = await response.json();
-			return responseData;
-		} catch (error) {
-			throw error;
-		}
+		return apiRequest(`/chat_log_message/chat_log/${chatLogId}/chat_log_message_id_offset/${lastMessageId}`, "GET");
 	};
 
 	var startPollMessages = function() {
@@ -182,7 +96,7 @@ var ChatPage = function() {
 		})
 		.catch(function(err) {
 			console.log(err);
-			window.location.search = `?path=/login`;
+			window.location.search = `?path=/login&error=${err}`;
 		});
 	};
 

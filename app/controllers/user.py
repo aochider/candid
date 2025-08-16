@@ -1,6 +1,7 @@
 from flask import request
 
 from app.decorators import auth, validate
+from app.errors import *
 from app.models.user import User
 
 def register_routes(app):
@@ -41,11 +42,11 @@ def register_routes(app):
 
 		if not stored_user:
 			User.fake_does_password_match()
-			raise Exception("invalid credentials")
+			raise INVALID_USER_LOGIN
 
 		if stored_user.does_password_match(password):
 			jwt = stored_user.create_token()
 		else:
-			raise Exception("invalid credentials")
+			raise INVALID_USER_LOGIN
 
 		return {"id": stored_user.id, "token": jwt}

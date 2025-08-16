@@ -1,3 +1,4 @@
+import json
 import os
 
 from flask import Flask
@@ -5,6 +6,7 @@ from flask_cors import CORS
 import psycopg2
 from app.config import DevelopmentConfig, ProductionConfig
 from app.database import connect_to_db
+from app.errors import *
 from app.models.user import User
 
 def create_app():
@@ -39,4 +41,24 @@ def create_app():
 	from app.controllers.user_position import register_routes as user_position_register_routes
 	user_position_register_routes(app)
 
+	@app.after_request
+	def set_json_header(response):
+		response.headers["Content-Type"] = "application/json"
+		return response
+
+	@app.errorhandler(InternalException)
+	def handle_internal_exception(ee):
+		return '{"error": "service error"}', 500
+
+	@app.errorhandler(ValidationException)
+	def handle_validation_exception(ee):
+		return json.dumps({'code': ee.code, 'error': ee.message}), 400
+
+	@app.errorhandler(Exception)
+	def handle_base_exception(ee):
+		import traceback
+		traceback.print_exc()
+		return '{"error": "service error"}', 500
+
 	return app
+

@@ -1,4 +1,5 @@
 .chat-page {
+	margin-top: 10em;
 }
 
 .chat-page .card {
@@ -11,6 +12,12 @@
 	position: relative;
 }
 
+.chat-page .header {
+	position: fixed;
+	top: 0;
+	z-index: 100;
+}
+
 .chat-page .input-box {
 	background-color: #ffffff;
 	bottom: 0;
@@ -19,16 +26,27 @@
 	left: 0;
 	padding: 1em;
 	position: fixed;
+	text-align: center;
 	width: 100%;
 }
 
-.chat-page .input-box textarea {
+.chat-page .input-box .message-input {
 	background-color: #cccccc;
 	border: 0;
 	border-radius: 1em;
 	height: 1em;
 	padding: 0.5em;
 	width: 100em;
+}
+
+.chat-page .input-box .message-submit {
+	background-color: var(--primary-color);
+	border: 0;
+	border-radius: 1em;
+	color: #ffffff;
+	height: 2em;
+	margin-left: 1em;
+	width: 2em;
 }
 
 .chat-page .message-box {

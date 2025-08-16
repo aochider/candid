@@ -4,6 +4,7 @@ import jwt
 import uuid
 
 from app.database import execute_query, map_query_to_class
+from app.errors import *
 
 class User():
 	# filled in at startup
@@ -71,23 +72,17 @@ class User():
 			print("Invalid token.", flush=True)
 			raise e
 
-		# TODO throw exceptions that flask catches and returns correct http codes and messages wo leaking
 		return None
 
 	# use this to burn some time if we didnt find a user
 	@staticmethod
 	def fake_does_password_match():
-		return bcrypt.checkpw(bytes('0123456789', 'utf-8'), bytes('9876543210', 'utf-8'))
-
-	@staticmethod
-	def get_all_users():
-		users = map_query_to_class(execute_query("select * from \"user\""), User)
-		return users
+		return bcrypt.checkpw(bytes('0123456789', 'utf-8'), bytes('$2b$14$if1z65maFt6mCfp9Vd5MNe1IgSwFQkoni3fSv/kun3mqFIyjcjvBS', 'utf-8'))
 
 	@staticmethod
 	def get_by_email(email):
 		users = map_query_to_class(execute_query("select * from \"user\" where email=%s", (email,)), User)
-		return users[0]
+		return users[0] if len(users) == 1 else None
 
 	@staticmethod
 	def get_by_token(token):
@@ -96,8 +91,8 @@ class User():
 		now = datetime.now(timezone.utc)
 		token_exp = datetime.fromtimestamp(decoded_token['exp'], tz=timezone.utc)
 		if token_exp < now:
-			raise Exception('invalid token')
+			raise INVALID_USER_TOKEN
 
 		user_id = decoded_token['sub']
 		users = map_query_to_class(execute_query("select * from \"user\" where id=%s", (user_id,)), User)
-		return users[0]
+		return users[0] if len(users) == 1 else None

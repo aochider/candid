@@ -24,7 +24,24 @@ var main = function() {
 window.addEventListener("DOMContentLoaded", main);
 
 function getCookie(name) {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop().split(';').shift();
+	const value = `; ${document.cookie}`;
+	const parts = value.split(`; ${name}=`);
+	if (parts.length === 2) return parts.pop().split(';').shift();
+}
+
+async function apiRequest(path, method, body) {
+	const response = await fetch(`${API_URL}${path}`, {
+		method: method,
+		headers: {
+			'Authorization': `Bearer ${getCookie("token")}`,
+			'Content-Type': 'application/json'
+		},
+		body: body ? JSON.stringify(body) : undefined,
+	});
+
+	if (!response.ok) {
+		throw new Error(await response.text());
+	}
+
+	return await response.json();
 }

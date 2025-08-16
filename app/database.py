@@ -1,6 +1,8 @@
 import psycopg2
 import psycopg2.extras
 
+from app.errors import *
+
 db = None
 
 def connect_to_db(config):
@@ -9,8 +11,8 @@ def connect_to_db(config):
 	try:
 		db = psycopg2.connect(config['SQLALCHEMY_DATABASE_URI'])
 		print("Database connection established.")
-	except psycopg2.Error as e:
-		print(f"Error connecting to database: {e}")
+	except psycopg2.Error as ee:
+		raise ee
 
 def execute_query(query, params=None):
 	"""Executes a SQL query using the global connection."""
@@ -31,10 +33,9 @@ def execute_query(query, params=None):
 
 			db.commit()  # Commit changes for DML operations
 			return retval  # No rows to fetch for DML
-	except psycopg2.Error as e:
-		print(f"Error executing query: {e}")
+	except psycopg2.Error as ee:
 		db.rollback()  # Rollback changes on error
-		return None
+		raise ee
 
 def close_db_connection():
 	"""Closes the global database connection."""

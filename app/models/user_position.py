@@ -13,10 +13,9 @@ class UserPosition():
 		return '<UserPosition %r>' % self.id
 
 	@staticmethod
-	def respond(user_id, position_id, result):
-		execute_query(
+	def create(user_id, position_id, result):
+		return execute_query(
 			"insert into \"user_position\" (user_id, position_id, result)"
 			" values (%s, %s, %s)"
 			" on conflict (id) do update set result = excluded.result returning id", (user_id, position_id, result)
 		)
-		return True

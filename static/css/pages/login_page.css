@@ -10,6 +10,12 @@
 	position: relative;
 }
 
+.login-page .error {
+	color: #ff0000;
+	margin-bottom: 1em;
+	text-align: center;
+}
+
 .login-page .form {
 	margin: 0 auto;
 }

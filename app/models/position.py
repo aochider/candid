@@ -17,6 +17,10 @@ class Position():
 		return '<Position %r>' % self.id
 
 	@staticmethod
+	def check_by_id(position_id):	
+		return execute_query("select 1 from position where id=%s", (position_id, ))
+
+	@staticmethod
 	def get_queue(user_id):	
 		limit = 10
 		positions = map_query_to_class(execute_query(

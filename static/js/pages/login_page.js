@@ -9,6 +9,9 @@ var LoginPage = function() {
 	var loginSubmit;
 
 	var constructor = function() {
+		const urlParams = new URLSearchParams(window.location.search);
+		errorText = urlParams.get("error");
+
 		container = document.createElement("div");
 		container.className = "login-page";
 
@@ -21,14 +24,25 @@ var LoginPage = function() {
 		logo.textContent = "Candid";
 		card.appendChild(logo);
 
+		error = document.createElement("div");
+		error.className = "error";
+		error.textContent = errorText;
+		if (errorText) {
+			card.appendChild(error);
+		}
+
 		form = document.createElement("form");
 		form.className = "form";
 		form.method = "POST";
 		form.onsubmit = function() {
-			login(emailInput.value, passwordInput.value).then(function(data) {
+			apiRequest("/user/login", "POST", {"email": emailInput.value, "password": passwordInput.value}).then(function(data) {
 				window.cookieStore.set("user_id", data.id);
 				window.cookieStore.set("token", data.token);
 				window.location.search = `?path=/positions`;
+			})
+			.catch(function(err) {
+				console.log(err);
+				window.location.search = `?path=/login&error=${err}`;
 			});
 
 			return false;
@@ -58,32 +72,6 @@ var LoginPage = function() {
 
 	pub.getContainer = function() {
 		return container;
-	};
-
-	var login = async function(email, password) {
-		const dataToSend = {
-			email: email,
-			password: password,
-		};
-
-		try {
-			const response = await fetch(`${API_URL}/user/login`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(dataToSend)
-			});
-
-			if (!response.ok) {
-				throw new Error(`HTTP error! status: ${response.status}`);
-			}
-
-			const responseData = await response.json();
-			return responseData;
-		} catch (error) {
-			throw error;
-		}
 	};
 
 	constructor();
