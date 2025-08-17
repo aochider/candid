@@ -8,6 +8,13 @@ from app.models.chat_log_message import ChatLogMessage
 from app.models.user import User
 
 def register_routes(app):
+	@app.route('/test', methods=['GET'])
+	def test():
+		print("test", flush=True)
+		count = ChatLogMessage.get_count_by_chat_log_id_since(4, 0)
+		time.sleep(10)
+		return {"count": count}
+
 	@app.route('/chat_log_message/chat_log/<int:chat_log_id>', methods=['GET'])
 	@auth(min_role=User.USER_ROLE_NORMAL)
 	def get_chat_log_message_by_chat_log_id(chat_log_id):
@@ -43,6 +50,7 @@ def register_routes(app):
 			raise INVALID_CHAT_LOG_ID
 
 		timeout = app.config.get('LONG_POLL_TIMEOUT')
+		interval = app.config.get('LONG_POLL_INTERVAL')
 		start_time = time.time()
 
 		while ((time.time() - start_time) < timeout):
@@ -53,7 +61,7 @@ def register_routes(app):
 				messages = [{"id": msg.id, "chat_log_id": msg.chat_log_id, "user_id": msg.user_id, "message": msg.message} for msg in messages]
 				return {"messages": messages}
 			else:
-				time.sleep(1)
+				time.sleep(interval)
 
 		return {"messages": []}
 

@@ -36,14 +36,18 @@ Use the `api` container shell to load test data. This will do inserts without an
 # Accessing postgres directly
 
 Exec into the `db` container and then run `psql --username=user mydatabase`. You can then use `psql` commands like `\l`, `\dt`, and so forth.
+
 # TODO
 
-* Make sure gunicorn and postgres are configured to handle many long polling connections (gunicorn worker type?)
-* Make sure gunicorn and Flask are set up correctly for prod (eg, not running at root)
+* Make sure gunicorn and Flask are set up correctly for prod (eg, not running at root?)
 * Set up prod vs dev Dockerfile stages so we don't copy all files to prod and such
-* Set up Flask config
 * Set up logging
-* Stop using select *
 * Add rate limiting
-* Set up load tests
 * Set up unit tests
+
+# Could be improved?
+
+* Make sure gunicorn and postgres are configured to handle many long polling connections (gunicorn worker type?)
+* Set up load tests
+* Stop using select *
+* Set up Flask config

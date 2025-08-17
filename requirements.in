@@ -1,8 +1,11 @@
 bcrypt
 Flask
+flask[async]
 Flask-CORS
 gunicorn
+gunicorn[gevent]
 jsonschema
 pip-tools
-psycopg2-binary
+psycopg[binary]
+psycopg[pool]
 PyJWT

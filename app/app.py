@@ -1,9 +1,12 @@
+import gevent.monkey
+gevent.monkey.patch_all()
+
 import json
 import os
 
 from flask import Flask
 from flask_cors import CORS
-import psycopg2
+
 from app.config import DevelopmentConfig, ProductionConfig
 from app.database import connect_to_db
 from app.errors import *

@@ -24,9 +24,6 @@ def auth(min_role):
 
 				request.user = user
 			except Exception as ee:
-				print('auth decorator exception', ee, flush=True)
-				import traceback
-				traceback.print_exc()
 				raise INVALID_CREDENTIALS from ee
 
 			return f(*args, **kwargs)

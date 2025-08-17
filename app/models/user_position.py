@@ -1,4 +1,4 @@
-from app.database import db, execute_query
+from app.database import execute_query
 
 class UserPosition():
 	RESULTS = ['agree', 'disagree', 'pass', 'chat']

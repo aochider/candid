@@ -1,4 +1,4 @@
-from app.database import db, execute_query, map_query_to_class
+from app.database import execute_query, map_query_to_class
 
 class Position():
 	# TODO what values are possible?

@@ -1,4 +1,4 @@
-from app.database import db
+from app.database import execute_query
 
 class Kudos():
 	def __init__(self):

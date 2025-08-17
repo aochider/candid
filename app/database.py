@@ -1,45 +1,41 @@
-import psycopg2
-import psycopg2.extras
+import psycopg
+from psycopg_pool import ConnectionPool
 
 from app.errors import *
 
-db = None
+db_pool = None
 
 def connect_to_db(config):
-	global db
+	global db_pool
 
 	# let this fail if there is an error. we want the server to not start up if this doesnt work.
-	db = psycopg2.connect(config['SQLALCHEMY_DATABASE_URI'])
-	print("Database connection established.")
+	#db = psycopg.connect(config['SQLALCHEMY_DATABASE_URI'])
+	print("Database pool established.")
+	db_pool = ConnectionPool(conninfo=config['SQLALCHEMY_DATABASE_URI'], min_size=100, open=True)
+
 
 def execute_query(query, params=None):
-	if db is None:
-		print("Database connection not established. Call connect_to_db() first.")
+	if db_pool is None:
+		print("Database pool not established. Call connect_to_db() first.")
 		return None
 
-	try:
-		is_select = query.strip().upper().startswith("SELECT")
-		is_insert = query.strip().upper().startswith("INSERT")
-		with db.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-			cur.execute(query, params)
-			retval = None
-			if is_select:
-				retval = cur.fetchall()
-			if is_insert:
-				retval = cur.fetchone()['id']
+	is_select = query.strip().upper().startswith("SELECT")
+	is_insert = query.strip().upper().startswith("INSERT")
+	with db_pool.connection() as conn:
+		with conn.cursor(row_factory=psycopg.rows.dict_row) as cur:
+			try:
+				cur.execute(query, params)
+				retval = None
+				if is_select:
+					retval = cur.fetchall()
+				if is_insert:
+					retval = cur.fetchone()['id']
 
-			db.commit()
-			return retval
-	except psycopg2.Error as ee:
-		db.rollback()
-		raise ee
-
-def close_db_connection():
-	global db
-	if db:
-		db.close()
-		print("Database connection closed.")
-		db = None
+				conn.commit()
+				return retval
+			except psycopg.Error as ee:
+				conn.rollback()
+				raise ee
 
 def map_query_to_class(rows, target_class):
 	results = []
